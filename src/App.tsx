@@ -245,13 +245,89 @@ function App() {
     }
   };
 
+  const seoMetadata = {
+    title: 'Intellisync Solutions Social Media Writer | AI Content Generation',
+    description: 'Revolutionize your social media strategy with AI-powered content generation. Create engaging posts, threads, and long-form content effortlessly.',
+    keywords: [
+      'AI writing',
+      'social media content',
+      'content generation',
+      'copywriting',
+      'thread writer',
+      'post generator',
+      'marketing AI',
+      'content strategy'
+    ],
+    canonical: 'https://home.intellisyncsolutions.io',
+    ogImage: '/og-image.png',
+    twitterImage: '/twitter-image.png'
+  };
+
   return (
     <HelmetProvider>
-      <div className={`min-h-screen ${isDark ? 'dark' : 'light'}`}>
-        <Helmet>
-          <title>AI Social Media Content Generator</title>
-        </Helmet>
+      <Helmet>
+        {/* Primary Meta Tags */}
+        <title>{seoMetadata.title}</title>
+        <meta name="title" content={seoMetadata.title} />
+        <meta name="description" content={seoMetadata.description} />
+        <meta name="keywords" content={seoMetadata.keywords.join(', ')} />
         
+        {/* Open Graph / Facebook */}
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content={seoMetadata.canonical} />
+        <meta property="og:title" content={seoMetadata.title} />
+        <meta property="og:description" content={seoMetadata.description} />
+        <meta property="og:image" content={seoMetadata.ogImage} />
+        
+        {/* Twitter */}
+        <meta property="twitter:card" content="summary_large_image" />
+        <meta property="twitter:url" content={seoMetadata.canonical} />
+        <meta property="twitter:title" content={seoMetadata.title} />
+        <meta property="twitter:description" content={seoMetadata.description} />
+        <meta property="twitter:image" content={seoMetadata.twitterImage} />
+        
+        {/* Canonical */}
+        <link rel="canonical" href={seoMetadata.canonical} />
+        
+        {/* Geo Tags */}
+        <meta name="geo.region" content="CA" />
+        <meta name="geo.placename" content="Ontario, Canada" />
+        
+        {/* Contact Information */}
+        <meta name="contact" content="Chris June" />
+        <meta name="contact:email" content="Chris.june@intellisync.ca" />
+        
+        {/* Robots */}
+        <meta name="robots" content="index, follow" />
+        
+        {/* Schema.org Markup */}
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "WebApplication",
+            "name": "Intellisync Solutions Social Media Writer",
+            "description": seoMetadata.description,
+            "url": seoMetadata.canonical,
+            "applicationCategory": "Productivity, Marketing, Content Generation",
+            "operatingSystem": "Web Browser",
+            "offers": {
+              "@type": "Offer",
+              "price": "0",
+              "priceCurrency": "USD"
+            },
+            "creator": {
+              "@type": "Organization",
+              "name": "Intellisync Solutions",
+              "contactPoint": {
+                "@type": "ContactPoint",
+                "email": "Chris.june@intellisync.ca",
+                "contactType": "Customer Support"
+              }
+            }
+          })}
+        </script>
+      </Helmet>
+      <div className={`min-h-screen ${isDark ? 'dark' : 'light'}`}>
         <Routes>
           <Route path="/" element={<LandingPage />} />
           <Route path="/pricing" element={<PricingPage />} />
@@ -264,6 +340,11 @@ function App() {
                   <meta name="keywords" content="AI writing, social media content, content generation, copywriting" />
                   <meta name="viewport" content="width=device-width, initial-scale=1" />
                   <link rel="canonical" href="https://home.intellisyncsolutions.io" />
+                  <meta property="og:title" content="IntelliSync Solutions Social Media Writer" />
+                  <meta property="og:description" content="AI-powered content generation for social media, long-form posts, and threads" />
+                  <meta property="og:url" content="https://home.intellisyncsolutions.io" />
+                  <meta property="twitter:title" content="IntelliSync Solutions Social Media Writer" />
+                  <meta property="twitter:description" content="AI-powered content generation for social media, long-form posts, and threads" />
                 </Helmet>
                 <div className="min-h-screen">
                   <div className="min-h-screen p-6 bg-background-highlight/50">
