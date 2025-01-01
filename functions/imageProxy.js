@@ -1,7 +1,5 @@
 const fetch = require('node-fetch');
 
-const imageUrls = new Map();
-
 exports.handler = async (event, context) => {
   if (event.httpMethod !== 'GET') {
     return { 
@@ -11,26 +9,32 @@ exports.handler = async (event, context) => {
   }
 
   try {
-    const imageId = event.path.split('/').pop();
-    console.log('Image proxy request received for ID:', imageId);
-    
-    const imageUrl = imageUrls.get(imageId);
+    const imageUrl = decodeURIComponent(event.queryStringParameters?.url || '');
     
     if (!imageUrl) {
       return {
-        statusCode: 404,
-        body: JSON.stringify({ message: 'Image not found' })
+        statusCode: 400,
+        body: JSON.stringify({ message: 'No image URL provided' })
       };
     }
 
     const imageResponse = await fetch(imageUrl);
+    
+    if (!imageResponse.ok) {
+      return {
+        statusCode: imageResponse.status,
+        body: JSON.stringify({ message: 'Failed to fetch image' })
+      };
+    }
+
     const imageBuffer = await imageResponse.buffer();
 
     return {
       statusCode: 200,
       headers: {
-        'Content-Type': imageResponse.headers.get('content-type'),
-        'Access-Control-Allow-Origin': '*'
+        'Content-Type': imageResponse.headers.get('content-type') || 'image/jpeg',
+        'Access-Control-Allow-Origin': '*',
+        'Cache-Control': 'public, max-age=86400' // Cache for 24 hours
       },
       body: imageBuffer.toString('base64'),
       isBase64Encoded: true

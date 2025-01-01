@@ -140,6 +140,24 @@ export const GeneratedContent: React.FC<GeneratedContentProps> = ({
     }
   };
 
+  const proxyImageUrl = async (originalUrl: string) => {
+    try {
+      const response = await fetch(`/api/imageProxy?url=${encodeURIComponent(originalUrl)}`, {
+        method: 'GET'
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to proxy image');
+      }
+
+      const imageBlob = await response.blob();
+      return URL.createObjectURL(imageBlob);
+    } catch (error) {
+      console.error('Error proxying image:', error);
+      return null;
+    }
+  };
+
   const copyToClipboard = async () => {
     try {
       await navigator.clipboard.writeText(dummyContent);
