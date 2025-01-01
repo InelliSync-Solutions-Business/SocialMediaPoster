@@ -19,7 +19,7 @@
     X-Frame-Options = "DENY"
     X-XSS-Protection = "1; mode=block"
     X-Content-Type-Options = "nosniff"
-    Content-Security-Policy = "default-src 'self'; img-src 'self' https://randomuser.me data: https:; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'"
+    Content-Security-Policy = "default-src 'self'; img-src 'self' https://randomuser.me https://api.randomuser.me data: https:; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'"
 
 [[headers]]
   for = "/api/*"
