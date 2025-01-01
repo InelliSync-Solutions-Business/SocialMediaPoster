@@ -39,5 +39,23 @@ export default defineConfig({
         rewrite: (path) => path.replace(/^\/api/, '/api')
       }
     }
+  },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'react-vendor': ['react', 'react-dom'],
+          'emotion-vendor': ['@emotion/react', '@emotion/styled'],
+          'openai-vendor': ['openai'],
+          'ui-vendor': ['clsx', '@radix-ui/react-slot', '@radix-ui/react-switch', '@radix-ui/react-tabs']
+        }
+      }
+    },
+    // Netlify-specific configuration
+    publicDir: 'dist',
+  },
+  // Add Netlify redirects
+  define: {
+    'process.env.NETLIFY': JSON.stringify(process.env.NETLIFY || false)
   }
 })
