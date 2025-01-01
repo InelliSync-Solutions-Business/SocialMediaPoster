@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { Routes, Route } from 'react-router-dom'
 import { HelmetProvider, Helmet } from 'react-helmet-async';
 import * as Tabs from '@radix-ui/react-tabs'
-import { Sun, Moon, Key } from 'lucide-react'
+import { Sun, Moon, Settings } from 'lucide-react'
 import { motion } from 'framer-motion'
 import Templates from './components/Templates'
 import GeneratedContent from './components/GeneratedContent'
@@ -10,6 +10,7 @@ import Footer from './components/Footer'
 import LandingPage from './pages/LandingPage'
 import PricingPage from './pages/PricingPage'
 import AILoader from './components/AILoader'
+import PreferenceSelection, { UserPreferences } from './components/PreferenceSelection';
 
 interface Template {
   id: string;
@@ -35,6 +36,60 @@ function App() {
   const [audience, setAudience] = useState('')
   const [style, setStyle] = useState('')
   const [guidelines, setGuidelines] = useState('')
+
+  // Preference state
+  const [isPreferencesOpen, setIsPreferencesOpen] = useState(false);
+  const [userPreferences, setUserPreferences] = useState<UserPreferences>({
+    platforms: {
+      instagram: true,
+      linkedin: false,
+      twitter: false,
+      tiktok: false,
+      facebook: false,
+      discord: false
+    },
+    platformFormats: {
+      instagram: {
+        imageGeneration: true,
+        hashtagSuggestions: true
+      },
+      linkedin: {
+        professionalTone: true
+      },
+      twitter: {
+        characterLimitOptimization: true
+      },
+      tiktok: {
+        trendingHashtags: true
+      },
+      facebook: {
+        groupTargeting: true
+      },
+      discord: {
+        threadOptimization: true
+      }
+    },
+    tone: 'professional',
+    contentTypes: {
+      motivational: true,
+      educational: true,
+      promotional: false,
+      personal: false
+    }
+  });
+
+  const handleOpenPreferences = () => {
+    setIsPreferencesOpen(true);
+  };
+
+  const handleClosePreferences = () => {
+    setIsPreferencesOpen(false);
+  };
+
+  const handleSavePreferences = (preferences: UserPreferences) => {
+    setUserPreferences(preferences);
+    // You can add additional logic here, like saving to local storage or sending to backend
+  };
 
   // Effect to handle theme changes
   useEffect(() => {
@@ -74,6 +129,121 @@ function App() {
         setActiveTab('short-form')
     }
   }
+
+  const generateContent = async () => {
+    // Construct a detailed prompt based on user preferences
+    let platformPrompt = '';
+    
+    // Add platform-specific formatting instructions
+    Object.entries(userPreferences.platforms).forEach(([platform, isSelected]) => {
+      if (isSelected) {
+        switch (platform) {
+          case 'instagram':
+            if (userPreferences.platformFormats.instagram.imageGeneration) {
+              platformPrompt += 'Generate an image for Instagram with square (1:1) or vertical (4:5) format. ';
+            }
+            if (userPreferences.platformFormats.instagram.hashtagSuggestions) {
+              platformPrompt += 'Include 3-5 relevant hashtags to increase discoverability. ';
+            }
+            break;
+          case 'linkedin':
+            if (userPreferences.platformFormats.linkedin.professionalTone) {
+              platformPrompt += 'Use a professional and authoritative tone suitable for LinkedIn. ';
+            }
+            break;
+          case 'twitter':
+            if (userPreferences.platformFormats.twitter.characterLimitOptimization) {
+              platformPrompt += 'Optimize content to be concise and impactful within 280 characters. ';
+            }
+            break;
+          case 'tiktok':
+            if (userPreferences.platformFormats.tiktok.trendingHashtags) {
+              platformPrompt += 'Incorporate current trending TikTok hashtags to increase visibility. ';
+            }
+            break;
+          case 'facebook':
+            if (userPreferences.platformFormats.facebook.groupTargeting) {
+              platformPrompt += 'Tailor content to be engaging for specific Facebook interest groups. ';
+            }
+            break;
+          case 'discord':
+            if (userPreferences.platformFormats.discord.threadOptimization) {
+              platformPrompt += 'Structure content to be thread-friendly and encourage community discussion. ';
+            }
+            break;
+        }
+      }
+    });
+
+    // Add tone and content type instructions
+    platformPrompt += `Tone should be ${userPreferences.tone}. `;
+    
+    const selectedContentTypes = Object.entries(userPreferences.contentTypes)
+      .filter(([_, isSelected]) => isSelected)
+      .map(([type]) => type);
+    
+    if (selectedContentTypes.length > 0) {
+      platformPrompt += `Content types to focus on: ${selectedContentTypes.join(', ')}. `;
+    }
+
+    // Combine platform-specific prompt with existing generation prompt
+    const enhancedPrompt = `${platformPrompt} ${topic} ${audience} ${style} ${guidelines}`;
+
+    // Rest of the existing generation logic
+    setIsLoading(true);
+    try {
+      console.log('Sending request to generate content...');
+      const response = await fetch('/api/generatePost', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          postType: activeTab.replace('-form', ''),
+          topic: enhancedPrompt,
+          audience,
+          style,
+          guidelines,
+        }),
+      });
+
+      const responseText = await response.text();
+      console.log('Raw server response:', responseText);
+
+      let data;
+      try {
+        data = JSON.parse(responseText);
+      } catch (parseError) {
+        console.error('Failed to parse server response:', parseError);
+        throw new Error(`Server returned invalid JSON: ${responseText}`);
+      }
+
+      if (!response.ok) {
+        console.error('Server returned error:', data);
+        throw new Error(data.error || 'Server returned an error');
+      }
+
+      console.log('Server response parsed:', data);
+
+      if (data.success) {
+        setGeneratedContent(data.content);
+      } else {
+        throw new Error(data.error || 'Failed to generate content');
+      }
+    } catch (error) {
+      console.error('Content generation failed:', error);
+      
+      // Type guard to check if error is an Error object
+      if (error instanceof Error) {
+        alert(error.message || 'Failed to generate content. Please try again.');
+      } else {
+        // Fallback for non-Error objects
+        alert('Failed to generate content. Please try again.');
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <HelmetProvider>
@@ -141,12 +311,20 @@ function App() {
                             Templates
                           </button>
                         </div>
-                        <button
-                          onClick={() => setIsDark(!isDark)}
-                          className="p-2 rounded-lg hover:bg-background-hover dark:hover:bg-secondary/20 transition-colors"
-                        >
-                          {isDark ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
-                        </button>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => setIsDark(!isDark)}
+                            className="p-2 rounded-lg hover:bg-background-hover dark:hover:bg-secondary/20 transition-colors"
+                          >
+                            {isDark ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
+                          </button>
+                          <button 
+                            onClick={handleOpenPreferences} 
+                            className="p-2 rounded-lg hover:bg-background-hover dark:hover:bg-secondary/20 transition-colors"
+                          >
+                            <Settings className="w-5 h-5" />
+                          </button>
+                        </div>
                       </header>
 
                       <main className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-6xl mx-auto">
@@ -245,48 +423,7 @@ function App() {
                                   <AILoader
                                     isLoading={isLoading}
                                     disabled={!topic.trim()}
-                                    onClick={async () => {
-                                      try {
-                                        setIsLoading(true);
-                                        const response = await fetch('/api/generatePost', {
-                                          method: 'POST',
-                                          headers: {
-                                            'Content-Type': 'application/json',
-                                          },
-                                          body: JSON.stringify({
-                                            postType: activeTab.replace('-form', ''),
-                                            topic,
-                                            audience,
-                                            style,
-                                            guidelines,
-                                          }),
-                                        });
-
-                                        const responseText = await response.text();
-                                        console.log('Raw response:', responseText);
-
-                                        let data;
-                                        try {
-                                          data = JSON.parse(responseText);
-                                        } catch (parseError) {
-                                          console.error('Failed to parse response:', parseError);
-                                          alert('Failed to parse server response. Check console for details.');
-                                          return;
-                                        }
-
-                                        if (data.success) {
-                                          setGeneratedContent(data.content);
-                                        } else {
-                                          console.error('Error generating content:', data.error);
-                                          alert('Failed to generate content. Please try again.');
-                                        }
-                                      } catch (error) {
-                                        console.error('Error:', error);
-                                        alert('Failed to generate content. Please try again.');
-                                      } finally {
-                                        setIsLoading(false);
-                                      }
-                                    }}
+                                    onClick={generateContent}
                                   >
                                     {isLoading ? 'Generating...' : `Generate ${activeTab === 'short-form' ? 'Post' : activeTab === 'long-form' ? 'Long Form Post' : 'Thread'}`}
                                   </AILoader>
@@ -311,33 +448,38 @@ function App() {
                                 },
                                 body: JSON.stringify({
                                   postType: activeTab.replace('-form', ''),
-                                  topic,
+                                  topic: `${topic} ${audience} ${style} ${guidelines}. Improve this response.`,
                                   audience,
                                   style,
-                                  guidelines: guidelines ? `${guidelines}. Improve this response.` : 'Improve this response.',
+                                  guidelines,
                                 }),
                               });
 
                               const responseText = await response.text();
-                              console.log('Raw response:', responseText);
+                              console.log('Raw server response:', responseText);
 
                               let data;
                               try {
                                 data = JSON.parse(responseText);
                               } catch (parseError) {
-                                console.error('Failed to parse response:', parseError);
-                                alert('Failed to parse server response. Check console for details.');
-                                return;
+                                console.error('Failed to parse server response:', parseError);
+                                throw new Error(`Server returned invalid JSON: ${responseText}`);
                               }
+
+                              if (!response.ok) {
+                                console.error('Server returned error:', data);
+                                throw new Error(data.error || 'Server returned an error');
+                              }
+
+                              console.log('Server response parsed:', data);
 
                               if (data.success) {
                                 setGeneratedContent(data.content);
                               } else {
-                                console.error('Error generating content:', data.error);
-                                alert('Failed to regenerate content. Please try again.');
+                                throw new Error(data.error || 'Failed to generate content');
                               }
                             } catch (error) {
-                              console.error('Error:', error);
+                              console.error('Error generating content:', error);
                               alert('Failed to regenerate content. Please try again.');
                             } finally {
                               setIsLoading(false);
@@ -354,6 +496,11 @@ function App() {
         </Routes>
         
         <Footer />
+        <PreferenceSelection 
+          open={isPreferencesOpen} 
+          onClose={handleClosePreferences}
+          onSave={handleSavePreferences}
+        />
       </div>
     </HelmetProvider>
   );

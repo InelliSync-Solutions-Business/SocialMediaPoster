@@ -1,24 +1,31 @@
 import React, { useState, useEffect } from 'react';
-import { Twitter, Linkedin, Facebook, Copy, Share2, Check, Trash2, RefreshCw } from 'lucide-react';
+import { Twitter, Linkedin, Facebook, Copy, Share2, Check, Trash2, RefreshCw, Image as ImageIcon } from 'lucide-react';
 import { countTokens, truncateToMaxTokens } from '../utils/tokenUtils';
+import AILoader from './AILoader';
 
 interface GeneratedContentProps {
   activeTab: string;
   content?: string;
   onClear?: () => void;
   onRegenerate?: () => void;
+  isLoading?: boolean;
 }
 
 export const GeneratedContent: React.FC<GeneratedContentProps> = ({ 
   activeTab, 
   content, 
   onClear, 
-  onRegenerate 
+  onRegenerate,
+  isLoading = false
 }) => {
   const [copied, setCopied] = useState(false);
   const [selectedPlatform, setSelectedPlatform] = useState<string | null>(null);
   const [tokenCount, setTokenCount] = useState(0);
   const [truncatedContent, setTruncatedContent] = useState('');
+  const [generatedImageUrl, setGeneratedImageUrl] = useState<string | null>(null);
+  const [isGeneratingImage, setIsGeneratingImage] = useState(false);
+  const [imageError, setImageError] = useState<string | null>(null);
+  const [imageLoadError, setImageLoadError] = useState(false);
 
   const dummyContent = content || "Your generated content will appear here. Fill out the form and click generate to create new content.";
 
@@ -57,13 +64,93 @@ export const GeneratedContent: React.FC<GeneratedContentProps> = ({
     }
   };
 
+  const handleGenerateImage = async () => {
+    if (!content) {
+      console.error('No content available for image generation');
+      return;
+    }
+
+    setIsGeneratingImage(true);
+    setImageError(null);
+    setImageLoadError(false);  
+    setGeneratedImageUrl(null);  
+
+    try {
+      console.log('Starting image generation request...');
+      const response = await fetch('/api/generateImage', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          prompt: `Create an image that visually represents the following social media content: ${content}`,
+          quality: 'hd',
+          size: '1024x1024',
+          style: 'vivid'
+        })
+      });
+
+      const responseText = await response.text();
+      console.log('Raw image generation response:', responseText);
+
+      let data;
+      try {
+        data = JSON.parse(responseText);
+      } catch (parseError) {
+        console.error('Failed to parse image generation response:', parseError);
+        throw new Error(`Server returned invalid JSON: ${responseText}`);
+      }
+
+      if (!response.ok) {
+        console.error('Image generation failed:', data);
+        throw new Error(data.error || 'Failed to generate image');
+      }
+
+      console.log('Image generation successful:', data);
+      
+      // Verify the image URL
+      if (!data.imageUrl) {
+        console.error('No image URL in response:', data);
+        throw new Error('No image URL in response');
+      }
+
+      // Log the URL we're about to set
+      console.log('Setting image URL:', {
+        url: data.imageUrl
+      });
+      
+      // Set the image URL and verify it loads
+      const img = new Image();
+      img.onerror = () => {
+        console.error('Failed to load image from URL:', data.imageUrl);
+        setImageLoadError(true);
+        setImageError('Failed to load the generated image');
+      };
+      img.onload = () => {
+        console.log('Image loaded successfully');
+        setImageLoadError(false);
+        setGeneratedImageUrl(data.imageUrl);
+      };
+      img.src = data.imageUrl;
+    } catch (error: unknown) {
+      console.error('Image generation error:', error);
+      setImageError(error instanceof Error ? error.message : 'Failed to generate image. Please try again.');
+    } finally {
+      setIsGeneratingImage(false);
+    }
+  };
+
   const copyToClipboard = async () => {
     try {
       await navigator.clipboard.writeText(dummyContent);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    } catch (err) {
-      console.error('Failed to copy text:', err);
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        console.error('Failed to copy text:', err.message);
+      } else {
+        console.error('An unknown error occurred');
+      }
     }
   };
 
@@ -79,10 +166,15 @@ export const GeneratedContent: React.FC<GeneratedContentProps> = ({
     }
   };
 
+  const handleImageError = () => {
+    setImageLoadError(true);
+    console.error('Failed to load generated image');
+  };
+
   return (
     <div className="space-y-4">
       <h2 className="text-xl font-semibold">
-        Generated {activeTab === 'short-form' ? 'Posts' : activeTab === 'long-form' ? 'Long Form Post' : 'Thread'}
+        Generated {activeTab === 'short-form' ? 'Posts' : activeTab === 'long-form' ? 'Long Form Post' : activeTab === 'image' ? 'Image' : 'Thread'}
       </h2>
 
       <div className="bg-secondary/20 dark:bg-[#1a1b26] rounded-lg p-6 border border-border/50 backdrop-blur-sm shadow-soft dark:shadow-[0_0_15px_rgba(0,0,0,0.1)]">
@@ -164,8 +256,73 @@ export const GeneratedContent: React.FC<GeneratedContentProps> = ({
           >
             <RefreshCw size={20} />
           </button>
+
+          {/* Image Generation Button */}
+          <button 
+            onClick={handleGenerateImage}
+            disabled={isGeneratingImage || !content}
+            className={`
+              p-2 rounded-full 
+              ${isGeneratingImage ? 'opacity-50 cursor-not-allowed' : 'hover:bg-secondary/50 dark:hover:bg-secondary/20'}
+              transition-colors duration-300
+              flex items-center justify-center
+            `}
+            title="Generate Image from Content"
+          >
+            <ImageIcon size={20} />
+          </button>
         </div>
       </div>
+
+      {(generatedImageUrl || isGeneratingImage) && (
+        <div className="w-full flex flex-col items-center justify-center gap-4 mt-4">
+          {isGeneratingImage ? (
+            <div className="w-full max-w-md">
+              <AILoader 
+                isLoading={true}
+                message="Generating your image with AI..."
+                disabled={true}
+              />
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center gap-4">
+              {generatedImageUrl && (
+                <div className="relative w-full max-w-md aspect-square rounded-lg overflow-hidden shadow-lg">
+                  <img
+                    src={generatedImageUrl}
+                    alt="Generated content"
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      console.error('Image failed to load:', {
+                        url: generatedImageUrl,
+                        error: e
+                      });
+                      setImageLoadError(true);
+                    }}
+                    onLoad={() => {
+                      console.log('Image loaded successfully:', generatedImageUrl);
+                      setImageLoadError(false);
+                    }}
+                  />
+                  {imageLoadError && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-gray-100 dark:bg-gray-800">
+                      <div className="text-center p-4">
+                        <p className="text-sm text-gray-500 mb-2">Failed to load image.</p>
+                        <button
+                          onClick={handleGenerateImage}
+                          className="text-sm text-primary hover:text-primary/80"
+                        >
+                          Try Again
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
 
       {selectedPlatform && (
         <div className="flex items-center gap-2 text-sm text-foreground/60">
