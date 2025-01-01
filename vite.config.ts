@@ -24,23 +24,42 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks(id) {
-          // Split node_modules into separate chunks
+          // More aggressive code splitting
           if (id.includes('node_modules')) {
+            // Split large libraries into separate chunks
+            if (id.includes('react') || id.includes('react-dom')) {
+              return 'react-vendor';
+            }
+            if (id.includes('openai')) {
+              return 'openai-vendor';
+            }
+            if (id.includes('@emotion') || id.includes('clsx')) {
+              return 'styling-vendor';
+            }
             return 'vendor';
           }
-          // You can add more specific chunk splitting here
+          // Group components
           if (id.includes('src/components')) {
             return 'components';
+          }
+          // Group pages/routes
+          if (id.includes('src/pages') || id.includes('src/routes')) {
+            return 'routes';
           }
         }
       }
     },
-    chunkSizeWarningLimit: 1000, // Increase chunk size warning limit
+    chunkSizeWarningLimit: 2000, // Increase limit to 2MB
     sourcemap: false, // Disable sourcemaps for production
-    minify: 'esbuild', // Use esbuild instead of terser
+    minify: 'esbuild', // Use esbuild for faster minification
   },
-  // Add code splitting for large dependencies
   optimizeDeps: {
-    include: ['react', 'react-dom', 'openai'],
+    include: [
+      'react', 
+      'react-dom', 
+      'openai', 
+      '@emotion/react', 
+      'clsx'
+    ]
   }
 })
