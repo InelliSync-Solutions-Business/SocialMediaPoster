@@ -37,14 +37,7 @@ export default defineConfig({
     },
     chunkSizeWarningLimit: 1000, // Increase chunk size warning limit
     sourcemap: false, // Disable sourcemaps for production
-    minify: 'terser', // Use terser for more efficient minification
-    terserOptions: {
-      compress: {
-        drop_console: true, // Remove console logs in production
-        drop_debugger: true,
-      },
-      mangle: true, // Mangle variable names to reduce bundle size
-    }
+    minify: 'esbuild', // Use esbuild instead of terser
   },
   // Add code splitting for large dependencies
   optimizeDeps: {
