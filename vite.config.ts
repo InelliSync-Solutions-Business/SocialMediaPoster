@@ -28,15 +28,12 @@ export default defineConfig({
     },
   },
   server: {
-    headers: {
-      'Content-Security-Policy': "default-src 'self'; img-src 'self' https://randomuser.me data:; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline';"
-    },
     proxy: {
       '/api': {
         target: 'http://localhost:3001',
         changeOrigin: true,
         secure: false,
-        rewrite: (path) => path.replace(/^\/api/, '/api')
+        rewrite: (path) => path.replace(/^\/api/, '')
       }
     }
   },
@@ -50,11 +47,8 @@ export default defineConfig({
           'ui-vendor': ['clsx', '@radix-ui/react-slot', '@radix-ui/react-switch', '@radix-ui/react-tabs']
         }
       }
-    },
-    // Netlify-specific configuration
-    publicDir: 'dist',
+    }
   },
-  // Add Netlify redirects
   define: {
     'process.env.NETLIFY': JSON.stringify(process.env.NETLIFY || false)
   }

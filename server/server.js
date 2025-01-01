@@ -30,10 +30,26 @@ function buildPrompt({ postType, topic, audience, style, guidelines }) {
 
 // Serverless function handler
 export const handler = async (event, context) => {
+  // Handle CORS preflight requests
+  if (event.httpMethod === 'OPTIONS') {
+    return {
+      statusCode: 200,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'POST, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type',
+      },
+      body: '',
+    };
+  }
+
   // Only allow POST requests
   if (event.httpMethod !== 'POST') {
     return {
       statusCode: 405,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+      },
       body: JSON.stringify({ error: 'Method Not Allowed' }),
     };
   }
@@ -46,6 +62,10 @@ export const handler = async (event, context) => {
     if (!postType || !topic) {
       return {
         statusCode: 400,
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({
           success: false,
           error: 'Post type and topic are required',
@@ -57,6 +77,10 @@ export const handler = async (event, context) => {
     if (!process.env.OPENAI_API_KEY) {
       return {
         statusCode: 500,
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({
           success: false,
           error: 'OpenAI API key is not configured'
@@ -89,30 +113,29 @@ export const handler = async (event, context) => {
     // Return the generated content
     return {
       statusCode: 200,
+      headers: {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*',
+      },
       body: JSON.stringify({
         success: true,
         content: completion.choices[0].message.content.trim()
       }),
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'POST',
-      }
     };
   } catch (error) {
     console.error('Server error:', error);
 
     return {
       statusCode: 500,
+      headers: {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*',
+      },
       body: JSON.stringify({
         success: false,
         error: 'Failed to generate content',
         details: error.message
       }),
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
-      }
     };
   }
 };
