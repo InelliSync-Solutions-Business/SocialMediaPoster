@@ -61,5 +61,12 @@ export default defineConfig({
       '@emotion/react', 
       'clsx'
     ]
+  },
+  esbuild: {
+    tsconfigRaw: {
+      compilerOptions: {
+        experimentalDecorators: true,
+      }
+    }
   }
 })
