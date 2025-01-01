@@ -4,6 +4,19 @@ import path from 'path'
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  server: {
+    headers: {
+      'Content-Security-Policy': "default-src 'self'; img-src 'self' https://randomuser.me data:; script-src 'self' 'unsafe-inline' 'unsafe-eval';"
+    },
+    proxy: {
+      '/api': {
+        target: 'http://localhost:3001',
+        changeOrigin: true,
+        secure: false,
+        rewrite: (path) => path.replace(/^\/api/, '/api')
+      }
+    }
+  },
   plugins: [
     react({
       jsxImportSource: '@emotion/react',
@@ -26,16 +39,6 @@ export default defineConfig({
     alias: {
       '@': path.resolve(__dirname, './src'),
     },
-  },
-  server: {
-    proxy: {
-      '/api': {
-        target: 'http://localhost:3001',
-        changeOrigin: true,
-        secure: false,
-        rewrite: (path) => path.replace(/^\/api/, '/api')
-      }
-    }
   },
   build: {
     rollupOptions: {

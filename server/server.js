@@ -109,7 +109,7 @@ app.post('/api/generatePost', async (req, res, next) => {
     console.log('Built prompt:', prompt);
 
     const completion = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
+      model: 'gpt-4',
       messages: [
         {
           role: 'system',
@@ -119,15 +119,13 @@ app.post('/api/generatePost', async (req, res, next) => {
           role: 'user',
           content: prompt
         }
-      ],
-      temperature: 0.7,
-      max_tokens: 1000,
+      ]
     }).catch(error => {
       console.error('OpenAI API Error:', error);
       throw new Error(`OpenAI API Error: ${error.message}`);
     });
 
-    console.log('OpenAI response received');
+    console.log('OpenAI response received:', completion.choices[0]);
 
     if (!completion.choices || !completion.choices[0] || !completion.choices[0].message) {
       console.error('Invalid completion response:', completion);
