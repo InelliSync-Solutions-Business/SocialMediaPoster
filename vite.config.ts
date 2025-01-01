@@ -4,7 +4,15 @@ import * as path from 'path'
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react({
+      babel: {
+        plugins: [
+          ['@emotion/babel-plugin', { autoLabel: 'dev-only' }]
+        ]
+      }
+    })
+  ],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
@@ -59,6 +67,7 @@ export default defineConfig({
       'react-dom', 
       'openai', 
       '@emotion/react', 
+      '@emotion/styled',
       'clsx'
     ]
   },
