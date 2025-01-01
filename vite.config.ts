@@ -1,17 +1,23 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
-import * as path from 'path'
+import path from 'path'
 
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
     react({
+      jsxImportSource: '@emotion/react',
       babel: {
         plugins: [
-          ['@emotion/babel-plugin', { 
-            autoLabel: 'dev-only',
-            labelFormat: '[local]'
-          }]
+          '@emotion',
+          [
+            '@emotion/babel-plugin-jsx-pragmatic',
+            {
+              export: 'jsx',
+              import: '__cssprop',
+              module: '@emotion/react'
+            }
+          ]
         ]
       }
     })
@@ -34,47 +40,32 @@ export default defineConfig({
   build: {
     rollupOptions: {
       output: {
-        manualChunks(id) {
-          // More aggressive code splitting
-          if (id.includes('node_modules')) {
-            // Split large libraries into separate chunks
-            if (id.includes('react') || id.includes('react-dom')) {
-              return 'react-vendor';
-            }
-            if (id.includes('openai')) {
-              return 'openai-vendor';
-            }
-            if (id.includes('@emotion') || id.includes('clsx')) {
-              return 'styling-vendor';
-            }
-            return 'vendor';
-          }
-          // Group components
-          if (id.includes('src/components')) {
-            return 'components';
-          }
-          // Group pages/routes
-          if (id.includes('src/pages') || id.includes('src/routes')) {
-            return 'routes';
-          }
+        manualChunks: {
+          'react-vendor': ['react', 'react-dom'],
+          'emotion-vendor': ['@emotion/react', '@emotion/styled'],
+          'openai-vendor': ['openai'],
+          'ui-vendor': ['clsx', '@radix-ui/react-slot', '@radix-ui/react-switch', '@radix-ui/react-tabs']
         }
       }
     },
-    chunkSizeWarningLimit: 2000, // Increase limit to 2MB
-    sourcemap: false, // Disable sourcemaps for production
-    minify: 'esbuild', // Use esbuild for faster minification
+    chunkSizeWarningLimit: 2000,
+    sourcemap: false,
+    minify: 'esbuild',
   },
   optimizeDeps: {
     include: [
       'react', 
       'react-dom', 
-      'openai', 
       '@emotion/react', 
       '@emotion/styled',
       'clsx'
-    ]
+    ],
+    esbuildOptions: {
+      target: 'es2020'
+    }
   },
   esbuild: {
+    logOverride: { 'this-is-undefined-in-esm': 'silent' },
     tsconfigRaw: {
       compilerOptions: {
         experimentalDecorators: true,
