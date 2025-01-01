@@ -8,7 +8,10 @@ export default defineConfig({
     react({
       babel: {
         plugins: [
-          ['@emotion/babel-plugin', { autoLabel: 'dev-only' }]
+          ['@emotion/babel-plugin', { 
+            autoLabel: 'dev-only',
+            labelFormat: '[local]'
+          }]
         ]
       }
     })
