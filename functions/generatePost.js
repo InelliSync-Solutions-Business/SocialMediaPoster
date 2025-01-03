@@ -27,7 +27,7 @@ exports.handler = async (event, context) => {
     const prompt = buildPrompt({ postType, topic, audience, style, guidelines });
 
     const completion = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo",
+      model: "gpt-4o-mini",
       messages: [{ role: "user", content: prompt }]
     });
 

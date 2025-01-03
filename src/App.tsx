@@ -153,7 +153,7 @@ function App() {
             break;
           case 'twitter':
             if (userPreferences.platformFormats.twitter.characterLimitOptimization) {
-              platformPrompt += 'Optimize content to be concise and impactful within 280 characters. ';
+              platformPrompt += 'Optimize content to be concise and impactful within 140 characters. ';
             }
             break;
           case 'tiktok':
