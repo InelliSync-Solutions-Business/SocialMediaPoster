@@ -131,69 +131,16 @@ function App() {
   }
 
   const generateContent = async () => {
-    // Construct a detailed prompt based on user preferences
-    let platformPrompt = '';
-    
-    // Add platform-specific formatting instructions
-    Object.entries(userPreferences.platforms).forEach(([platform, isSelected]) => {
-      if (isSelected) {
-        switch (platform) {
-          case 'instagram':
-            if (userPreferences.platformFormats.instagram.imageGeneration) {
-              platformPrompt += 'Generate an image for Instagram with square (1:1) or vertical (4:5) format. ';
-            }
-            if (userPreferences.platformFormats.instagram.hashtagSuggestions) {
-              platformPrompt += 'Include 3-5 relevant hashtags to increase discoverability. ';
-            }
-            break;
-          case 'linkedin':
-            if (userPreferences.platformFormats.linkedin.professionalTone) {
-              platformPrompt += 'Use a professional and authoritative tone suitable for LinkedIn. ';
-            }
-            break;
-          case 'twitter':
-            if (userPreferences.platformFormats.twitter.characterLimitOptimization) {
-              platformPrompt += 'Optimize content to be concise and impactful within 140 characters. ';
-            }
-            break;
-          case 'tiktok':
-            if (userPreferences.platformFormats.tiktok.trendingHashtags) {
-              platformPrompt += 'Incorporate current trending TikTok hashtags to increase visibility. ';
-            }
-            break;
-          case 'facebook':
-            if (userPreferences.platformFormats.facebook.groupTargeting) {
-              platformPrompt += 'Tailor content to be engaging for specific Facebook interest groups. ';
-            }
-            break;
-          case 'discord':
-            if (userPreferences.platformFormats.discord.threadOptimization) {
-              platformPrompt += 'Structure content to be thread-friendly and encourage community discussion. ';
-            }
-            break;
-        }
-      }
-    });
-
-    // Add tone and content type instructions
-    platformPrompt += `Tone should be ${userPreferences.tone}. `;
-    
-    const selectedContentTypes = Object.entries(userPreferences.contentTypes)
-      .filter(([_, isSelected]) => isSelected)
-      .map(([type]) => type);
-    
-    if (selectedContentTypes.length > 0) {
-      platformPrompt += `Content types to focus on: ${selectedContentTypes.join(', ')}. `;
-    }
-
-    // Combine platform-specific prompt with existing generation prompt
-    const enhancedPrompt = `${platformPrompt} ${topic} ${audience} ${style} ${guidelines}`;
-
-    // Rest of the existing generation logic
     setIsLoading(true);
     try {
+      const enhancedPrompt = `${topic} ${audience} ${style} ${guidelines}`;
       console.log('Sending request to generate content...');
-      const response = await fetch('/api/generatePost', {
+
+      const apiEndpoint = import.meta.env.PROD 
+        ? '/.netlify/functions/generatePost'
+        : 'http://localhost:3000/api/generatePost';
+
+      const response = await fetch(apiEndpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
