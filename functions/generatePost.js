@@ -1,5 +1,5 @@
-const { OpenAI } = require('openai');
-const dotenv = require('dotenv');
+import { OpenAI } from 'openai';
+import dotenv from 'dotenv';
 
 dotenv.config();
 
@@ -9,7 +9,7 @@ function buildPrompt({ postType, topic, audience, style, guidelines }) {
   Follow these guidelines: ${guidelines}`;
 }
 
-exports.handler = async (event, context) => {
+export const handler = async (event, context) => {
   if (event.httpMethod !== 'POST') {
     return { 
       statusCode: 405, 
@@ -38,7 +38,8 @@ exports.handler = async (event, context) => {
         'Access-Control-Allow-Origin': '*'
       },
       body: JSON.stringify({
-        generatedPost: completion.choices[0].message.content
+        success: true,
+        content: completion.choices[0].message.content
       })
     };
   } catch (error) {
@@ -46,7 +47,7 @@ exports.handler = async (event, context) => {
     return {
       statusCode: 500,
       body: JSON.stringify({ 
-        message: 'Error generating post', 
+        success: false,
         error: error.message 
       })
     };
