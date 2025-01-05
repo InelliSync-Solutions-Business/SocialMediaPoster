@@ -127,61 +127,32 @@ export const GeneratedContent: React.FC<GeneratedContentProps> = ({
 
     try {
       console.log('Starting image generation request...');
-      const response = await fetch('/api/generateImage', {
+      const apiEndpoint = import.meta.env.PROD 
+        ? '/api/generateImage'
+        : 'http://localhost:3000/api/generateImage';
+        
+      const response = await fetch(apiEndpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           prompt: `Create an image that visually represents the following social media content: ${content}`,
-          quality: 'hd',
-          size: '1024x1024',
-          style: 'vivid'
         })
       });
 
-      const responseText = await response.text();
-      console.log('Raw image generation response:', responseText);
-
-      let data;
-      try {
-        data = JSON.parse(responseText);
-      } catch (parseError) {
-        console.error('Failed to parse image generation response:', parseError);
-        throw new Error(`Server returned invalid JSON: ${responseText}`);
-      }
-
       if (!response.ok) {
-        console.error('Image generation failed:', data);
-        throw new Error(data.error || 'Failed to generate image');
+        const errorData = await response.json().catch(() => ({ error: 'Failed to parse error response' }));
+        throw new Error(errorData.error || 'Failed to generate image');
       }
 
-      console.log('Image generation successful:', data);
-      
-      // Verify the image URL
-      if (!data.imageUrl) {
-        console.error('No image URL in response:', data);
-        throw new Error('No image URL in response');
+      const data = await response.json();
+      if (!data.success || !data.imageUrl) {
+        throw new Error('Invalid response from image generation service');
       }
 
-      // Log the URL we're about to set
-      console.log('Setting image URL:', {
-        url: data.imageUrl
-      });
-      
-      // Set the image URL and verify it loads
-      const img = new Image();
-      img.onerror = () => {
-        console.error('Failed to load image from URL:', data.imageUrl);
-        setImageLoadError(true);
-        setImageError('Failed to load the generated image');
-      };
-      img.onload = () => {
-        console.log('Image loaded successfully');
-        setImageLoadError(false);
-        setGeneratedImageUrl(data.imageUrl);
-      };
-      img.src = data.imageUrl;
+      setGeneratedImageUrl(data.imageUrl);
+      setImageLoadError(false);
     } catch (error: unknown) {
       console.error('Image generation error:', error);
       setImageError(error instanceof Error ? error.message : 'Failed to generate image. Please try again.');
