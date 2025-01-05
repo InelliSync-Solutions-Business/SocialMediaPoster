@@ -19,17 +19,21 @@ export const handler = async (event, context) => {
 
   try {
     const { postType, topic, audience, style, guidelines } = JSON.parse(event.body);
+    console.log('Received request:', { postType, topic, audience, style, guidelines });
 
     const openai = new OpenAI({
       apiKey: process.env.OPENAI_API_KEY
     });
+    console.log('OpenAI client initialized');
 
     const prompt = buildPrompt({ postType, topic, audience, style, guidelines });
+    console.log('Built prompt:', prompt);
 
     const completion = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [{ role: "user", content: prompt }]
     });
+    console.log('OpenAI response received');
 
     return {
       statusCode: 200,
@@ -44,6 +48,11 @@ export const handler = async (event, context) => {
     };
   } catch (error) {
     console.error('Error generating post:', error);
+    console.error('Error details:', {
+      message: error.message,
+      stack: error.stack,
+      name: error.name
+    });
     return {
       statusCode: 500,
       body: JSON.stringify({ 
