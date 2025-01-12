@@ -30,10 +30,12 @@ interface TemplateCategory {
 }
 
 interface TemplatesProps {
-  onSelectTemplate: (template: Template) => void;
+  category: string;
+  onSelect: (template: Template | null) => void;
+  selected: Template | null;
 }
 
-const Templates: React.FC<TemplatesProps> = ({ onSelectTemplate }) => {
+const Templates: React.FC<TemplatesProps> = ({ category, onSelect, selected }) => {
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
 
   const templateCategories: TemplateCategory[] = [
@@ -593,7 +595,7 @@ const Templates: React.FC<TemplatesProps> = ({ onSelectTemplate }) => {
                     {subcategory.templates.map((template) => (
                       <div 
                         key={template.id}
-                        onClick={() => onSelectTemplate(template)}
+                        onClick={() => onSelect(template)}
                         className="
                           cursor-pointer 
                           p-4 

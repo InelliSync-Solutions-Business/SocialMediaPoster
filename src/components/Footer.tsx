@@ -1,7 +1,11 @@
 import React from 'react';
 import { Globe, Mail, MapPin, Twitter, Linkedin, Instagram, Github } from 'lucide-react';
 
-const Footer: React.FC = () => {
+interface FooterProps {
+  className?: string;
+}
+
+const Footer: React.FC<FooterProps> = ({ className }) => {
   const socialLinks = [
     {
       icon: Twitter,
@@ -30,7 +34,7 @@ const Footer: React.FC = () => {
   ];
 
   return (
-    <footer className="bg-secondary/10 dark:bg-secondary/20 py-8 mt-8 border-t border-border/20">
+    <footer className={[className, "bg-secondary/10 dark:bg-secondary/20 py-8 mt-8 border-t border-border/20"].filter(Boolean).join(' ')}>
       <div className="max-w-6xl mx-auto px-4 grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
         <div>
           <h3 className="text-xl font-bold text-foreground/80 dark:text-foreground/90 mb-4">

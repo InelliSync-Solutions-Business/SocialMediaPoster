@@ -5,6 +5,7 @@ import { CacheProvider, Global, css } from '@emotion/react'
 import { cache } from './emotion'
 import App from './App.tsx'
 import './index.css'
+import './styles/globals.css'
 
 // Set initial theme
 const darkModeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)')

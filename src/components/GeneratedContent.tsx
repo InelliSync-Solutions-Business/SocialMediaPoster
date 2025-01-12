@@ -19,6 +19,32 @@ import AILoader from './AILoader';
 import { Tooltip } from '@mui/material'; 
 import { ThreadList } from './threads/ThreadList';
 import { ThreadPostProps } from './threads/ThreadPost';
+import { UserPreferences } from '../types/preferences';
+
+interface PlatformFormats {
+  instagram?: {
+    imageGeneration: boolean;
+    hashtagSuggestions: boolean;
+  };
+  linkedin?: {
+    professionalTone: boolean;
+  };
+  twitter?: {
+    characterLimitOptimization: boolean;
+  };
+  tiktok?: {
+    trendingHashtags: boolean;
+  };
+  facebook?: {
+    communityEngagement: boolean;
+  };
+  discord?: {
+    threadedDiscussions: boolean;
+  };
+  templates?: {
+    template?: string;
+  };
+}
 
 interface GeneratedContentProps {
   activeTab: string;
@@ -26,14 +52,18 @@ interface GeneratedContentProps {
   onClear?: () => void;
   onRegenerate?: () => void;
   isLoading?: boolean;
+  preferences?: UserPreferences;
 }
+
+type PlatformKey = 'instagram' | 'linkedin' | 'twitter' | 'tiktok' | 'facebook' | 'discord';
 
 export const GeneratedContent: React.FC<GeneratedContentProps> = ({ 
   activeTab, 
   content, 
   onClear, 
   onRegenerate,
-  isLoading = false
+  isLoading = false,
+  preferences
 }) => {
   const [copied, setCopied] = useState(false);
   const [selectedPlatform, setSelectedPlatform] = useState<string | null>(null);
@@ -43,22 +73,91 @@ export const GeneratedContent: React.FC<GeneratedContentProps> = ({
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
   const [imageError, setImageError] = useState<string | null>(null);
   const [imageLoadError, setImageLoadError] = useState(false);
-
-  // New states for inline editing
   const [isEditing, setIsEditing] = useState(false);
   const [editableContent, setEditableContent] = useState('');
   const [characterCount, setCharacterCount] = useState(0);
   const [showInfoTooltip, setShowInfoTooltip] = useState(false);
-
-  // New states for threads
   const [threads, setThreads] = useState<ThreadPostProps[]>([]);
   const [selectedThreadId, setSelectedThreadId] = useState<string | null>(null);
+  const [hashtags, setHashtags] = useState<string[]>([]);
 
   const contentEditableRef = useRef<HTMLDivElement>(null);
   const infoIconRef = useRef<HTMLDivElement>(null);
 
   const dummyContent = content || "Your generated content will appear here. Fill out the form and click generate to create new content.";
   const platformLimit = getPlatformTokenLimit(activeTab);
+
+  // Format content based on platform preferences
+  const formatContentForPlatform = (content: string, platform: string) => {
+    if (!preferences?.platformFormats) return content;
+
+    let formattedContent = content;
+  
+    // Type-safe indexing
+    const platformFormat = platform in preferences.platformFormats 
+      ? preferences.platformFormats[platform as PlatformKey] 
+      : undefined;
+
+    if (!platformFormat) return content;
+
+    // Type guard to check if the platform format has templates
+    const hasTemplate = (format: any): format is { template?: string } => 
+      format && 'template' in format;
+
+    if (hasTemplate(platformFormat) && platformFormat.template) {
+      // Apply template if it exists
+      formattedContent = platformFormat.template.replace('{{content}}', formattedContent);
+    }
+
+    // Type guard to check if the platform format has hashtagSuggestions
+    const hasHashtagSuggestions = (format: any): format is { hashtagSuggestions: boolean } => 
+      format && 'hashtagSuggestions' in format;
+
+    if (platform === 'instagram' && hasHashtagSuggestions(platformFormat) && platformFormat.hashtagSuggestions) {
+      formattedContent = `${formattedContent}\n\n${hashtags.join(' ')}`;
+    }
+
+    // Similar type guards for other platform-specific formatting
+    const hasCharacterLimitOptimization = (format: any): format is { characterLimitOptimization: boolean } => 
+      format && 'characterLimitOptimization' in format;
+
+    const hasProfessionalTone = (format: any): format is { professionalTone: boolean } => 
+      format && 'professionalTone' in format;
+
+    if (platform === 'twitter' && hasCharacterLimitOptimization(platformFormat) && platformFormat.characterLimitOptimization) {
+      formattedContent = formattedContent.slice(0, 280);
+    }
+
+    if (platform === 'linkedin' && hasProfessionalTone(platformFormat) && platformFormat.professionalTone) {
+      // Add professional formatting (e.g., line breaks between paragraphs)
+      formattedContent = formattedContent.split('\n').filter(Boolean).join('\n\n');
+    }
+
+    // Only format as threads if the active tab is specifically for threads
+    if (activeTab === 'Threads') {
+      formattedContent = formatThreadedPost(formattedContent);
+    }
+
+    return formattedContent;
+  };
+
+  // Apply tone-based styling
+  const getToneStyles = () => {
+    if (!preferences?.tone) return '';
+    
+    switch (preferences.tone) {
+      case 'professional':
+        return 'font-serif text-gray-800';
+      case 'casual':
+        return 'font-sans text-gray-700';
+      case 'inspirational':
+        return 'font-sans italic text-indigo-600';
+      case 'humorous':
+        return 'font-sans text-purple-600';
+      default:
+        return '';
+    }
+  };
 
   useEffect(() => {
     if (dummyContent) {
@@ -67,14 +166,39 @@ export const GeneratedContent: React.FC<GeneratedContentProps> = ({
       setEditableContent(dummyContent);
       setCharacterCount(dummyContent.length);
 
-      // Optional: Add a warning or handling for token limits
+      // Generate hashtags for Instagram if enabled
+      if (preferences?.platformFormats?.instagram?.hashtagSuggestions) {
+        // This would typically call an API to generate relevant hashtags
+        setHashtags(['#content', '#socialmedia', '#digital']);
+      }
+
       if (tokens > platformLimit) {
         console.warn(`Content exceeds recommended token limit for ${activeTab} (${tokens} > ${platformLimit})`);
       }
 
-      setTruncatedContent(dummyContent);
+      // Format content based on selected platform
+      const formattedContent = selectedPlatform 
+        ? formatContentForPlatform(dummyContent, selectedPlatform)
+        : dummyContent;
+
+      setTruncatedContent(formattedContent);
     }
-  }, [dummyContent, activeTab]);
+  }, [dummyContent, activeTab, selectedPlatform, preferences]);
+
+  useEffect(() => {
+    // Convert content to threads when content changes
+    if (content && activeTab === 'Threads') {
+      const threadContent = formatThreadedPost(content);
+      const newThreads: ThreadPostProps[] = threadContent.split('\n\n').map((content, index) => ({
+        id: `thread-${index + 1}`,
+        content: content,
+        likes: 0,
+        retweets: 0
+      }));
+
+      setThreads(newThreads);
+    }
+  }, [content, activeTab]);
 
   const handleContentEdit = (e: React.FormEvent<HTMLDivElement>) => {
     const newContent = e.currentTarget.textContent || '';
@@ -98,23 +222,27 @@ export const GeneratedContent: React.FC<GeneratedContentProps> = ({
   };
 
   const handleShare = async (platform: string) => {
+    // Check if platform is enabled in preferences
+    if (preferences?.platforms && !preferences.platforms[platform as keyof typeof preferences.platforms]) {
+      console.warn(`Platform ${platform} is disabled in preferences`);
+      return;
+    }
+
     setSelectedPlatform(platform);
     
-    // Format the content for threaded posts
-    const formattedContent = formatThreadedPost(dummyContent);
+    // Format content with platform-specific preferences
+    const formattedContent = formatContentForPlatform(dummyContent, platform);
+    const shareText = encodeURIComponent(formattedContent);
     
     // Get platform-specific token limit
     const maxTokens = getPlatformTokenLimit(platform);
     const tokens = countTokens(formattedContent);
 
-    // Warn if content exceeds platform limit
     if (tokens > maxTokens) {
       console.warn(`Content exceeds ${platform} token limit (${tokens} > ${maxTokens})`);
     }
-    
-    const shareText = encodeURIComponent(formattedContent);
-    let shareUrl = '';
 
+    let shareUrl = '';
     switch (platform) {
       case 'twitter':
         shareUrl = `https://twitter.com/intent/tweet?text=${shareText}`;
@@ -144,6 +272,12 @@ export const GeneratedContent: React.FC<GeneratedContentProps> = ({
   };
 
   const handleGenerateImage = async () => {
+    // Check if image generation is enabled for Instagram
+    if (!preferences?.platformFormats?.instagram?.imageGeneration) {
+      setImageError('Image generation is disabled in preferences');
+      return;
+    }
+
     if (!content) {
       console.error('No content available for image generation');
       return;
@@ -151,8 +285,8 @@ export const GeneratedContent: React.FC<GeneratedContentProps> = ({
 
     setIsGeneratingImage(true);
     setImageError(null);
-    setImageLoadError(false);  
-    setGeneratedImageUrl(null);  
+    setImageLoadError(false);
+    setGeneratedImageUrl(null);
 
     try {
       console.log('Starting image generation request...');
@@ -242,7 +376,7 @@ export const GeneratedContent: React.FC<GeneratedContentProps> = ({
   // Thread-specific methods
   const formatThreadedPost = (content: string): string => {
     // Break long content into multiple threads if needed
-    const MAX_THREAD_LENGTH = 280; // Twitter-like character limit
+    const MAX_THREAD_LENGTH = 140; // Twitter-like character limit
     const threads: string[] = [];
     
     let remainingContent = content;
@@ -300,23 +434,65 @@ export const GeneratedContent: React.FC<GeneratedContentProps> = ({
 
   useEffect(() => {
     // Convert content to threads when content changes
-    if (content) {
+    if (content && activeTab === 'Threads') {
       const threadContent = formatThreadedPost(content);
-      const newThreads: ThreadPostProps[] = threadContent.split('\n\n').map((text, index) => ({
+      const newThreads: ThreadPostProps[] = threadContent.split('\n\n').map((content, index) => ({
         id: `thread-${index + 1}`,
-        content: text,
-        author: 'AI Assistant',
-        timestamp: new Date().toLocaleString()
+        content: content,
+        likes: 0,
+        retweets: 0
       }));
 
       setThreads(newThreads);
     }
-  }, [content]);
+  }, [content, activeTab]);
+
+  // Utility component to wrap disabled buttons
+  const TooltipWrapper: React.FC<{ 
+    children: React.ReactElement; 
+    title: string; 
+    disabled?: boolean; 
+  }> = ({ children, title, disabled }) => {
+    return disabled ? (
+      <Tooltip title={title}>
+        <span style={{ cursor: 'not-allowed', display: 'inline-block' }}>
+          {React.cloneElement(children, { 
+            style: { 
+              ...children.props.style, 
+              pointerEvents: 'none', 
+              opacity: 0.5 
+            } 
+          })}
+        </span>
+    </Tooltip>
+    ) : (
+      <Tooltip title={title}>
+        {children}
+      </Tooltip>
+    );
+  };
+
+  // Render content based on active tab
+  const renderContent = () => {
+    const editableContent = content || dummyContent;
+
+    switch (activeTab) {
+      case 'Threads':
+        return formatThreadedPost(editableContent);
+      case 'Templates':
+        return content || 'Select a template to generate content.';
+      case 'short-form':
+      case 'long-form':
+      case 'image':
+      default:
+        return editableContent;
+    }
+  };
 
   return (
     <div className="space-y-4">
       <h2 className="text-xl font-semibold">
-        Generated {activeTab === 'short-form' ? 'Posts' : activeTab === 'long-form' ? 'Long Form Post' : activeTab === 'image' ? 'Image' : 'Thread'}
+        Generated {activeTab === 'short-form' ? 'Posts' : activeTab === 'long-form' ? 'Long Form Post' : activeTab === 'image' ? 'Image' : activeTab === 'Threads' ? 'Thread' : activeTab === 'Templates' ? 'Template' : 'Content'}
       </h2>
 
       <div className="bg-secondary/20 dark:bg-[#1a1b26] rounded-lg p-6 border border-border/50 backdrop-blur-sm shadow-soft dark:shadow-[0_0_15px_rgba(0,0,0,0.1)]">
@@ -330,7 +506,7 @@ export const GeneratedContent: React.FC<GeneratedContentProps> = ({
             p-2 rounded-md cursor-text
           `}
         >
-          {formatThreadedPost(editableContent)}
+          {renderContent()}
         </div>
 
         {/* Character Count and Info Icon */}
@@ -367,7 +543,7 @@ export const GeneratedContent: React.FC<GeneratedContentProps> = ({
               Tokens: {tokenCount}
             </div>
           )}
-          <Tooltip title="Share on Twitter" arrow>
+          <TooltipWrapper title="Share on Twitter" disabled={isLoading}>
             <button 
               onClick={() => handleShare('twitter')}
               className={`
@@ -378,9 +554,9 @@ export const GeneratedContent: React.FC<GeneratedContentProps> = ({
             >
               <Twitter size={20} />
             </button>
-          </Tooltip>
+          </TooltipWrapper>
           
-          <Tooltip title="Share on LinkedIn" arrow>
+          <TooltipWrapper title="Share on LinkedIn" disabled={isLoading}>
             <button 
               onClick={() => handleShare('linkedin')}
               className={`
@@ -391,9 +567,9 @@ export const GeneratedContent: React.FC<GeneratedContentProps> = ({
             >
               <Linkedin size={20} />
             </button>
-          </Tooltip>
+          </TooltipWrapper>
           
-          <Tooltip title="Share on Facebook" arrow>
+          <TooltipWrapper title="Share on Facebook" disabled={isLoading}>
             <button 
               onClick={() => handleShare('facebook')}
               className={`
@@ -404,9 +580,9 @@ export const GeneratedContent: React.FC<GeneratedContentProps> = ({
             >
               <Facebook size={20} />
             </button>
-          </Tooltip>
+          </TooltipWrapper>
           
-          <Tooltip title="Share on Instagram" arrow>
+          <TooltipWrapper title="Share on Instagram" disabled={isLoading}>
             <button 
               onClick={() => handleShare('instagram')}
               className={`
@@ -417,11 +593,11 @@ export const GeneratedContent: React.FC<GeneratedContentProps> = ({
             >
               <Instagram size={20} />
             </button>
-          </Tooltip>
+          </TooltipWrapper>
           
         
           
-          <Tooltip title="Share on YouTube" arrow>
+          <TooltipWrapper title="Share on YouTube" disabled={isLoading}>
             <button 
               onClick={() => handleShare('youtube')}
               className={`
@@ -432,9 +608,9 @@ export const GeneratedContent: React.FC<GeneratedContentProps> = ({
             >
               <Youtube size={20} />
             </button>
-          </Tooltip>
+          </TooltipWrapper>
           
-          <Tooltip title="Copy Content" arrow>
+          <TooltipWrapper title="Copy Content" disabled={isLoading}>
             <button 
               onClick={copyToClipboard}
               className={`
@@ -445,18 +621,18 @@ export const GeneratedContent: React.FC<GeneratedContentProps> = ({
             >
               {copied ? <Check size={20} /> : <Copy size={20} />}
             </button>
-          </Tooltip>
+          </TooltipWrapper>
 
-          <Tooltip title="Clear Content" arrow>
+          <TooltipWrapper title="Clear Content" disabled={isLoading}>
             <button 
               onClick={handleClear}
               className="p-2 rounded-full hover:bg-destructive/20 hover:text-destructive transition-colors duration-300"
             >
               <Trash2 size={20} />
             </button>
-          </Tooltip>
+          </TooltipWrapper>
 
-          <Tooltip title="Regenerate Content" arrow>
+          <TooltipWrapper title="Regenerate Content" disabled={isLoading}>
             <button 
               onClick={handleRegenerate}
               disabled={isLoading}
@@ -468,9 +644,9 @@ export const GeneratedContent: React.FC<GeneratedContentProps> = ({
             >
               <RefreshCw size={20} />
             </button>
-          </Tooltip>
+          </TooltipWrapper>
 
-          <Tooltip title="Generate Image" arrow>
+          <TooltipWrapper title="Generate Image" disabled={isLoading || !content}>
             <button 
               onClick={handleGenerateImage}
               disabled={isGeneratingImage || !content}
@@ -482,9 +658,9 @@ export const GeneratedContent: React.FC<GeneratedContentProps> = ({
             >
               <ImageIcon size={20} />
             </button>
-          </Tooltip>
+          </TooltipWrapper>
 
-          <Tooltip title="Token Information" arrow>
+          <TooltipWrapper title="Token Information" disabled={isLoading}>
             <div 
               ref={infoIconRef}
               onMouseEnter={() => setShowInfoTooltip(true)}
@@ -493,7 +669,7 @@ export const GeneratedContent: React.FC<GeneratedContentProps> = ({
             >
               <Info size={20} />
             </div>
-          </Tooltip>
+          </TooltipWrapper>
         </div>
       </div>
 
