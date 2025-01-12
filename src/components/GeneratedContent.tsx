@@ -1,8 +1,24 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Twitter, Linkedin, Facebook, Copy, Share2, Check, Trash2, RefreshCw, Image as ImageIcon, Info } from 'lucide-react';
+import { 
+  Twitter, 
+  Linkedin, 
+  Facebook, 
+  Instagram, 
+  
+  Youtube, 
+  Copy, 
+  Share2, 
+  Check, 
+  Trash2, 
+  RefreshCw, 
+  Image as ImageIcon, 
+  Info 
+} from 'lucide-react';
 import { countTokens, getPlatformTokenLimit } from '../utils/tokenUtils';
 import AILoader from './AILoader';
-import { Tooltip } from '@mui/material'; // Assuming you have installed @mui/material
+import { Tooltip } from '@mui/material'; 
+import { ThreadList } from './threads/ThreadList';
+import { ThreadPostProps } from './threads/ThreadPost';
 
 interface GeneratedContentProps {
   activeTab: string;
@@ -33,6 +49,10 @@ export const GeneratedContent: React.FC<GeneratedContentProps> = ({
   const [editableContent, setEditableContent] = useState('');
   const [characterCount, setCharacterCount] = useState(0);
   const [showInfoTooltip, setShowInfoTooltip] = useState(false);
+
+  // New states for threads
+  const [threads, setThreads] = useState<ThreadPostProps[]>([]);
+  const [selectedThreadId, setSelectedThreadId] = useState<string | null>(null);
 
   const contentEditableRef = useRef<HTMLDivElement>(null);
   const infoIconRef = useRef<HTMLDivElement>(null);
@@ -80,19 +100,19 @@ export const GeneratedContent: React.FC<GeneratedContentProps> = ({
   const handleShare = async (platform: string) => {
     setSelectedPlatform(platform);
     
+    // Format the content for threaded posts
+    const formattedContent = formatThreadedPost(dummyContent);
+    
     // Get platform-specific token limit
     const maxTokens = getPlatformTokenLimit(platform);
-    const tokens = countTokens(dummyContent);
+    const tokens = countTokens(formattedContent);
 
     // Warn if content exceeds platform limit
     if (tokens > maxTokens) {
-      // Optional: Implement truncation or show a warning
       console.warn(`Content exceeds ${platform} token limit (${tokens} > ${maxTokens})`);
-      // You could optionally truncate here if needed
-      // const truncatedContent = truncateToMaxTokens(dummyContent, maxTokens);
     }
     
-    const shareText = encodeURIComponent(dummyContent);
+    const shareText = encodeURIComponent(formattedContent);
     let shareUrl = '';
 
     switch (platform) {
@@ -104,6 +124,15 @@ export const GeneratedContent: React.FC<GeneratedContentProps> = ({
         break;
       case 'facebook':
         shareUrl = `https://www.facebook.com/sharer/sharer.php?quote=${shareText}`;
+        break;
+      case 'instagram':
+        shareUrl = `https://www.instagram.com/direct/new/?text=${shareText}`;
+        break;
+      case 'tiktok':
+        shareUrl = `https://www.tiktok.com/create/react?text=${shareText}`;
+        break;
+      case 'youtube':
+        shareUrl = `https://www.youtube.com/upload?text=${shareText}`;
         break;
       default:
         console.warn(`Unsupported sharing platform: ${platform}`);
@@ -210,6 +239,80 @@ export const GeneratedContent: React.FC<GeneratedContentProps> = ({
     console.error('Failed to load generated image');
   };
 
+  // Thread-specific methods
+  const formatThreadedPost = (content: string): string => {
+    // Break long content into multiple threads if needed
+    const MAX_THREAD_LENGTH = 280; // Twitter-like character limit
+    const threads: string[] = [];
+    
+    let remainingContent = content;
+    while (remainingContent.length > 0) {
+      const threadContent = remainingContent.slice(0, MAX_THREAD_LENGTH);
+      threads.push(threadContent);
+      remainingContent = remainingContent.slice(MAX_THREAD_LENGTH);
+    }
+
+    return threads.join('\n\n');
+  };
+
+  const handleCopyThread = (threadId: string) => {
+    const thread = threads.find(t => t.id === threadId);
+    if (thread) {
+      navigator.clipboard.writeText(thread.content);
+      console.log(`Thread ${threadId} copied to clipboard`);
+    }
+  };
+
+  const handleGenerateThreadImage = async (threadId: string) => {
+    const thread = threads.find(t => t.id === threadId);
+    if (!thread) return;
+
+    setSelectedThreadId(threadId);
+    setIsGeneratingImage(true);
+    setImageError(null);
+    setImageLoadError(false);
+    setGeneratedImageUrl(null);
+
+    try {
+      const response = await fetch('/api/generateImage', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          prompt: `Create an image that visually represents the following social media thread: ${thread.content}`,
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to generate image');
+      }
+
+      const data = await response.json();
+      setGeneratedImageUrl(data.imageUrl);
+    } catch (error) {
+      console.error('Thread image generation error:', error);
+      setImageError(error instanceof Error ? error.message : 'Failed to generate image');
+    } finally {
+      setIsGeneratingImage(false);
+    }
+  };
+
+  useEffect(() => {
+    // Convert content to threads when content changes
+    if (content) {
+      const threadContent = formatThreadedPost(content);
+      const newThreads: ThreadPostProps[] = threadContent.split('\n\n').map((text, index) => ({
+        id: `thread-${index + 1}`,
+        content: text,
+        author: 'AI Assistant',
+        timestamp: new Date().toLocaleString()
+      }));
+
+      setThreads(newThreads);
+    }
+  }, [content]);
+
   return (
     <div className="space-y-4">
       <h2 className="text-xl font-semibold">
@@ -227,7 +330,7 @@ export const GeneratedContent: React.FC<GeneratedContentProps> = ({
             p-2 rounded-md cursor-text
           `}
         >
-          {editableContent}
+          {formatThreadedPost(editableContent)}
         </div>
 
         {/* Character Count and Info Icon */}
@@ -264,93 +367,146 @@ export const GeneratedContent: React.FC<GeneratedContentProps> = ({
               Tokens: {tokenCount}
             </div>
           )}
-          <button 
-            onClick={() => handleShare('twitter')}
-            className={`
-              p-2 rounded-full 
-              ${selectedPlatform === 'twitter' ? 'bg-[#1DA1F2] text-white' : 'hover:bg-secondary/50 dark:hover:bg-secondary/20'}
-              transition-colors duration-300
-            `}
-          >
-            <Twitter size={20} />
-          </button>
+          <Tooltip title="Share on Twitter" arrow>
+            <button 
+              onClick={() => handleShare('twitter')}
+              className={`
+                p-2 rounded-full 
+                ${selectedPlatform === 'twitter' ? 'bg-[#1DA1F2] text-white' : 'hover:bg-secondary/50 dark:hover:bg-secondary/20'}
+                transition-colors duration-300
+              `}
+            >
+              <Twitter size={20} />
+            </button>
+          </Tooltip>
           
-          <button 
-            onClick={() => handleShare('linkedin')}
-            className={`
-              p-2 rounded-full 
-              ${selectedPlatform === 'linkedin' ? 'bg-[#0A66C2] text-white' : 'hover:bg-secondary/50 dark:hover:bg-secondary/20'}
-              transition-colors duration-300
-            `}
-          >
-            <Linkedin size={20} />
-          </button>
+          <Tooltip title="Share on LinkedIn" arrow>
+            <button 
+              onClick={() => handleShare('linkedin')}
+              className={`
+                p-2 rounded-full 
+                ${selectedPlatform === 'linkedin' ? 'bg-[#0A66C2] text-white' : 'hover:bg-secondary/50 dark:hover:bg-secondary/20'}
+                transition-colors duration-300
+              `}
+            >
+              <Linkedin size={20} />
+            </button>
+          </Tooltip>
           
-          <button 
-            onClick={() => handleShare('facebook')}
-            className={`
-              p-2 rounded-full 
-              ${selectedPlatform === 'facebook' ? 'bg-[#1877F2] text-white' : 'hover:bg-secondary/50 dark:hover:bg-secondary/20'}
-              transition-colors duration-300
-            `}
-          >
-            <Facebook size={20} />
-          </button>
+          <Tooltip title="Share on Facebook" arrow>
+            <button 
+              onClick={() => handleShare('facebook')}
+              className={`
+                p-2 rounded-full 
+                ${selectedPlatform === 'facebook' ? 'bg-[#1877F2] text-white' : 'hover:bg-secondary/50 dark:hover:bg-secondary/20'}
+                transition-colors duration-300
+              `}
+            >
+              <Facebook size={20} />
+            </button>
+          </Tooltip>
           
-          <button 
-            onClick={copyToClipboard}
-            className={`
-              p-2 rounded-full 
-              ${copied ? 'bg-green-500 text-white' : 'hover:bg-secondary/50 dark:hover:bg-secondary/20'}
-              transition-colors duration-300
-              flex items-center justify-center
-            `}
-          >
-            {copied ? <Check size={20} /> : <Copy size={20} />}
-          </button>
+          <Tooltip title="Share on Instagram" arrow>
+            <button 
+              onClick={() => handleShare('instagram')}
+              className={`
+                p-2 rounded-full 
+                ${selectedPlatform === 'instagram' ? 'bg-[#E1306C] text-white' : 'hover:bg-secondary/50 dark:hover:bg-secondary/20'}
+                transition-colors duration-300
+              `}
+            >
+              <Instagram size={20} />
+            </button>
+          </Tooltip>
+          
+        
+          
+          <Tooltip title="Share on YouTube" arrow>
+            <button 
+              onClick={() => handleShare('youtube')}
+              className={`
+                p-2 rounded-full 
+                ${selectedPlatform === 'youtube' ? 'bg-[#FF0000] text-white' : 'hover:bg-secondary/50 dark:hover:bg-secondary/20'}
+                transition-colors duration-300
+              `}
+            >
+              <Youtube size={20} />
+            </button>
+          </Tooltip>
+          
+          <Tooltip title="Copy Content" arrow>
+            <button 
+              onClick={copyToClipboard}
+              className={`
+                p-2 rounded-full 
+                ${copied ? 'bg-green-500 text-white' : 'hover:bg-secondary/50 dark:hover:bg-secondary/20'}
+                transition-colors duration-300
+              `}
+            >
+              {copied ? <Check size={20} /> : <Copy size={20} />}
+            </button>
+          </Tooltip>
 
-          {/* Clear Button */}
-          <button 
-            onClick={handleClear}
-            className={`
-              p-2 rounded-full 
-              hover:bg-secondary/50 dark:hover:bg-secondary/20
-              transition-colors duration-300
-            `}
-            title="Clear Content"
-          >
-            <Trash2 size={20} />
-          </button>
+          <Tooltip title="Clear Content" arrow>
+            <button 
+              onClick={handleClear}
+              className="p-2 rounded-full hover:bg-destructive/20 hover:text-destructive transition-colors duration-300"
+            >
+              <Trash2 size={20} />
+            </button>
+          </Tooltip>
 
-          {/* Regenerate Button */}
-          <button 
-            onClick={handleRegenerate}
-            className={`
-              p-2 rounded-full 
-              hover:bg-secondary/50 dark:hover:bg-secondary/20
-              transition-colors duration-300
-            `}
-            title="Regenerate Content"
-          >
-            <RefreshCw size={20} />
-          </button>
+          <Tooltip title="Regenerate Content" arrow>
+            <button 
+              onClick={handleRegenerate}
+              disabled={isLoading}
+              className={`
+                p-2 rounded-full 
+                ${isLoading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-secondary/50 dark:hover:bg-secondary/20'}
+                transition-colors duration-300
+              `}
+            >
+              <RefreshCw size={20} />
+            </button>
+          </Tooltip>
 
-          {/* Image Generation Button */}
-          <button 
-            onClick={handleGenerateImage}
-            disabled={isGeneratingImage || !content}
-            className={`
-              p-2 rounded-full 
-              ${isGeneratingImage ? 'opacity-50 cursor-not-allowed' : 'hover:bg-secondary/50 dark:hover:bg-secondary/20'}
-              transition-colors duration-300
-              flex items-center justify-center
-            `}
-            title="Generate Image from Content"
-          >
-            <ImageIcon size={20} />
-          </button>
+          <Tooltip title="Generate Image" arrow>
+            <button 
+              onClick={handleGenerateImage}
+              disabled={isGeneratingImage || !content}
+              className={`
+                p-2 rounded-full 
+                ${isGeneratingImage ? 'opacity-50 cursor-not-allowed' : 'hover:bg-secondary/50 dark:hover:bg-secondary/20'}
+                transition-colors duration-300
+              `}
+            >
+              <ImageIcon size={20} />
+            </button>
+          </Tooltip>
+
+          <Tooltip title="Token Information" arrow>
+            <div 
+              ref={infoIconRef}
+              onMouseEnter={() => setShowInfoTooltip(true)}
+              onMouseLeave={() => setShowInfoTooltip(false)}
+              className="p-2 rounded-full hover:bg-secondary/50 dark:hover:bg-secondary/20 transition-colors duration-300 cursor-help"
+            >
+              <Info size={20} />
+            </div>
+          </Tooltip>
         </div>
       </div>
+
+      {threads.length > 0 && (
+        <div className="mt-4">
+          <h3 className="text-lg font-semibold mb-2 dark:text-gray-200">Threaded Posts</h3>
+          <ThreadList 
+            threads={threads}
+            onCopyThread={handleCopyThread}
+            onGenerateThreadImage={handleGenerateThreadImage}
+          />
+        </div>
+      )}
 
       {(generatedImageUrl || isGeneratingImage) && (
         <div className="w-full flex flex-col items-center justify-center gap-4 mt-4">

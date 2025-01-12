@@ -6,6 +6,12 @@ import { Particles } from '@tsparticles/react';
 import { loadSlim } from '@tsparticles/slim';
 import type { Engine } from '@tsparticles/engine';
 import type { IParticlesProps } from '@tsparticles/react';
+import { 
+  Image as ImageIcon, 
+  PenTool as ContentIcon, 
+  Share2 as SharingIcon, 
+  Target as TargetIcon 
+} from 'lucide-react';
 
 interface ExtendedParticlesProps extends IParticlesProps {
   init?: (engine: Engine) => Promise<void>;
@@ -60,19 +66,48 @@ const particlesProps: ExtendedParticlesProps = {
 const LandingPage: React.FC = () => {
   const features = [
     {
-      title: "Multi-Platform Mastery",
-      description: "Seamlessly generate content across platforms",
-      platforms: ['Twitter', 'LinkedIn', 'Instagram', 'TikTok']
+      title: "Image Generation",
+      description: "Create stunning visuals for your posts instantly",
+      icon: ImageIcon,
+      capabilities: [
+        "AI-powered image creation",
+        "Platform-specific image sizing",
+        "Style and mood customization"
+      ]
     },
     {
-      title: "AI-Driven Creativity",
-      description: "Leverage advanced AI to craft compelling narratives",
-      platforms: ['Blog', 'YouTube', 'Podcast', 'Email']
+      title: "Advanced Content Creation",
+      description: "Craft perfect posts for every platform",
+      icon: ContentIcon,
+      capabilities: [
+        "Short-form content",
+        "Long-form articles",
+        "Twitter/X threads",
+        "Custom content templates"
+      ]
     },
     {
-      title: "Personalized Optimization",
-      description: "Tailor content to your unique brand voice",
-      platforms: ['Tone', 'Style', 'Audience', 'Goals']
+      title: "Smart Social Sharing",
+      description: "Optimize and distribute content effortlessly",
+      icon: SharingIcon,
+      capabilities: [
+        "Direct platform sharing",
+        "Character count tracking",
+        "Platform-specific optimization",
+        "Inline content editing"
+      ]
+    },
+    {
+      title: "Multi-Platform Targeting",
+      description: "Tailored content for each social network",
+      icon: TargetIcon,
+      capabilities: [
+        "Facebook strategy",
+        "Instagram optimization",
+        "LinkedIn professional tone",
+        "X/Twitter engagement",
+        "Discord community content"
+      ]
     }
   ];
 
@@ -141,13 +176,16 @@ const LandingPage: React.FC = () => {
             <Link 
               to="/generate" 
               className="
-                bg-gradient-to-r from-purple-600 to-indigo-600
+                bg-white/10 backdrop-blur-lg
                 text-white
                 px-10 py-4 rounded-full text-lg 
-                hover:from-purple-700 hover:to-indigo-700 
+                hover:bg-white/20
                 transition-all duration-300
                 inline-block shadow-lg hover:shadow-xl
                 transform hover:-translate-y-1
+                border border-white/20
+                font-semibold
+                focus:outline-none focus:ring-2 focus:ring-white/30
               "
             >
               Start Your Content Journey
@@ -166,17 +204,20 @@ const LandingPage: React.FC = () => {
               whileHover={{ scale: 1.05 }}
               className="bg-white/10 backdrop-blur-lg p-6 rounded-xl border border-white/20"
             >
-              <h3 className="text-xl font-semibold mb-4">{feature.title}</h3>
+              <div className="flex items-center mb-4">
+                <feature.icon className="w-8 h-8 mr-3 text-white/80" strokeWidth={1.5} />
+                <h3 className="text-xl font-semibold">{feature.title}</h3>
+              </div>
               <p className="mb-4 text-white/70">{feature.description}</p>
               <div className="flex flex-wrap gap-2">
-                {feature.platforms.map((platform, idx) => (
+                {feature.capabilities.map((capability, idx) => (
                   <span 
                     key={idx} 
                     className="
                       bg-white/10 px-3 py-1 rounded-full 
                       text-sm text-white/80"
                   >
-                    {platform}
+                    {capability}
                   </span>
                 ))}
               </div>
@@ -227,13 +268,16 @@ const LandingPage: React.FC = () => {
           <Link 
             to="/pricing" 
             className="
-              bg-gradient-to-r from-purple-600 to-indigo-600
+              bg-white/10 backdrop-blur-lg
               text-white
               px-12 py-4 rounded-full text-lg 
-              hover:from-purple-700 hover:to-indigo-700 
+              hover:bg-white/20
               transition-all duration-300
               inline-block shadow-lg hover:shadow-xl
               transform hover:-translate-y-1
+              border border-white/20
+              font-semibold
+              focus:outline-none focus:ring-2 focus:ring-white/30
             "
           >
             Start Your Free Trial

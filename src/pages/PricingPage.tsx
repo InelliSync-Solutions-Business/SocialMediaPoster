@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { Particles } from '@tsparticles/react';
-import particlesConfig from '../utils/particlesConfig'; // We'll create this utility later
+import particlesConfig from '../utils/particlesConfig'; // Create this utility later
 import { TypeAnimation } from 'react-type-animation';
 
 const PricingPage: React.FC = () => {
@@ -21,6 +21,7 @@ const PricingPage: React.FC = () => {
         'Single Platform Support',
         'Standard Support'
       ],
+      description: "Perfect for tiptoeing into AI-driven content without scaring the neighbor’s cat. Enjoy your 10 monthly posts of fame—enough to make waves, but not quite enough to send your Wi-Fi into witness protection.",
       recommended: false
     },
     {
@@ -33,9 +34,10 @@ const PricingPage: React.FC = () => {
         '50 Posts per Month',
         'Advanced AI Generation',
         'Multi-Platform Support',
-        'Priority Support',
+        { text: 'Priority Support', comingSoon: true},
         { text: 'Content Analytics', comingSoon: true }
       ],
+      description: "Because your brilliance won’t contain itself to a single platform. Sling out 50 posts a month with advanced AI wizardry—just remember to keep the coffee flowing and the meltdown meter under control.",
       recommended: true
     },
     {
@@ -52,7 +54,7 @@ const PricingPage: React.FC = () => {
         { text: 'Advanced Analytics', comingSoon: true },
         { text: 'API Access', comingSoon: true }
       ],
-      description: "For when you want to break the internet... literally.",
+      description: "Because, hey, why settle for a mere viral sensation when you can knock over half the web? Go big or go home, right? Just remember to wave goodbye to all those cat memes you’ll be obliterating in the process.",
       recommended: false
     }
   ];
@@ -125,12 +127,12 @@ const PricingPage: React.FC = () => {
                       1000,
                       "Break the Internet",
                       1000,
-                      "Unlimited Possibilities",
+                      "Literally",
                       1000
                     ]}
                     wrapper="span"
                     cursor={true}
-                    repeat={0}
+                    repeat={Infinity}
                     className="block"
                   />
                 ) : (
