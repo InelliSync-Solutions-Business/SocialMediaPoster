@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Link, useNavigate } from 'react-router-dom';
 import { HelmetProvider, Helmet } from 'react-helmet-async';
-import { Sun, Moon, Settings,} from 'lucide-react';
+import { Sun, Moon, Settings, FileText, MessageSquare, Mail, PieChart } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MainLayout } from './components/layout/MainLayout';
 import { Button } from "@/components/ui/button";
@@ -15,8 +15,10 @@ import TemplatesPage from './pages/TemplatesPage';
 import AILoader from './components/AILoader';
 import PreferenceSelection from './components/PreferenceSelection';
 import { UserPreferences } from './types/preferences';
+import NewsletterPage from './pages/newsletter/NewsletterPage';
 import Polls from './components/Polls';
-import { FileText, MessageSquare, PieChart } from 'lucide-react';
+
+import { validatePreferences } from './utils/validation';
 
 interface Template {
   id: string;
@@ -28,6 +30,17 @@ interface Template {
   audience: string;
   style: string;
   guidelines: string;
+}
+
+interface GenerateParams {
+  postType: string;
+  topic: string;
+  writingStyle: string;
+  targetAudience: string;
+  additionalGuidelines?: string;
+  tone?: 'professional' | 'casual' | 'inspirational' | 'humorous';
+  length?: 'short' | 'medium' | 'long';
+  [key: string]: any; // For any additional properties
 }
 
 function App() {
@@ -46,6 +59,15 @@ function App() {
   // Preference state
   const [isPreferencesOpen, setIsPreferencesOpen] = useState(false);
   const [userPreferences, setUserPreferences] = useState<UserPreferences>({
+    defaultWritingStyle: 'conversational',
+    defaultAudience: 'business',
+    defaultGuidelines: [
+      'Maintain brand voice consistency',
+      'Include relevant industry keywords',
+      'Adhere to platform character limits',
+      'Use inclusive language',
+      'Follow SEO best practices'
+    ],
     platforms: {
       instagram: true,
       linkedin: true,
@@ -55,6 +77,7 @@ function App() {
       discord: true
     },
     tone: 'professional',
+    contentLength: 'medium',
     platformFormats: {
       instagram: {
         imageGeneration: true,
@@ -83,6 +106,9 @@ function App() {
       personal: true
     }
   });
+  const [errors, setErrors] = useState<string[]>([]);
+
+  const navigate = useNavigate();
 
   const handleOpenPreferences = () => {
     setIsPreferencesOpen(true);
@@ -92,9 +118,14 @@ function App() {
     setIsPreferencesOpen(false);
   };
 
-  const handleSavePreferences = (preferences: UserPreferences) => {
-    setUserPreferences(preferences);
-    // Additional logic for saving preferences
+  const handleSavePreferences = (prefs: UserPreferences) => {
+    const validationErrors = validatePreferences(prefs);
+    if (validationErrors.length > 0) {
+      setErrors(validationErrors);
+      return;
+    }
+    setUserPreferences(prefs);
+    setIsPreferencesOpen(false);
   };
 
   // Effect to handle theme changes
@@ -108,14 +139,18 @@ function App() {
     }
   }, [isDark])
 
-  const handleTemplateSelect = (template: Template | null) => {
+  const handleTemplateSelect = (template: Template | null, prepopulatedFields?: {
+    targetAudience: string;
+    writingStyle: string;
+    additionalGuidelines: string;
+  }) => {
     setSelectedTemplate(template);
-    if (template) {
+    if (template && prepopulatedFields) {
       // Automatically set some default values based on the selected template
       setTopic(''); // Reset topic to allow user input
-      setAudience(template.audience || '');
-      setStyle(template.style || '');
-      setGuidelines(template.guidelines || '');
+      setAudience(prepopulatedFields.targetAudience || '');
+      setStyle(prepopulatedFields.writingStyle || '');
+      setGuidelines(prepopulatedFields.additionalGuidelines || '');
     }
   };
 
@@ -135,28 +170,27 @@ function App() {
     setGuidelines(e.target.value);
   };
 
-  const handleGenerate = async () => {
+  const handleGenerate = async (params: GenerateParams) => {
     setIsLoading(true);
-    try {
-      const enhancedPrompt = `${topic} ${audience} ${style} ${guidelines}`;
-      console.log('Sending request to generate content...');
+    setGeneratedContent('');
 
-      const apiEndpoint = import.meta.env.PROD 
-        ? '/.netlify/functions/generatePost'
-        : 'http://localhost:3000/api/generatePost';
+    try {
+      const apiEndpoint = '/api/generatePost';
+
+      const requestBody = {
+            postType: activeTab.replace('-form', ''),
+            topic: `${topic} ${audience} ${style} ${guidelines}`,
+            audience,
+            style,
+            guidelines,
+          };
 
       const response = await fetch(apiEndpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          postType: activeTab.replace('-form', ''),
-          topic: enhancedPrompt,
-          audience,
-          style,
-          guidelines,
-        }),
+        body: JSON.stringify(requestBody),
       });
 
       const responseText = await response.text();
@@ -205,7 +239,6 @@ function App() {
     { path: '/', label: 'Home' },
     { path: '/content-generator', label: 'Content Generator' },
     { path: '/templates', label: 'Templates' },
-    { path: '/polls', label: 'Polls' },
     { path: '/pricing', label: 'Pricing' }
   ];
 
@@ -233,7 +266,7 @@ function App() {
     twitterImage: '/twitter-image.png'
   };
 
-  const [currentView, setCurrentView] = useState<'generator' | 'landing' | 'polls' | 'pricing' | 'templates'>('generator');
+  const [currentView, setCurrentView] = useState<"generator" | "landing" | "pricing" | "templates" | "polls">("landing");
 
   return (
     <HelmetProvider>
@@ -247,20 +280,39 @@ function App() {
           <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
             <div className="container flex h-14 max-w-screen-2xl items-center">
               <div className="mr-4 flex">
-                <a className="mr-6 flex items-center space-x-2" href="/">
+                <Link to="/" className="mr-6 flex items-center space-x-2">
                   <motion.div
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                   >
                     <span className="font-bold text-xl">IntelliSync</span>
                   </motion.div>
-                </a>
+                </Link>
               </div>
 
               <div className="flex flex-1 items-center justify-between space-x-2 md:justify-end">
-                <Button
-                  variant="ghost"
-                  size="icon"
+                <nav className="flex space-x-4">
+                  <Link 
+                    to="/generator" 
+                    className="text-foreground hover:text-primary transition-colors"
+                  >
+                    Social Media Generator
+                  </Link>
+                  <Link 
+                    to="/newsletter" 
+                    className="text-foreground hover:text-primary transition-colors"
+                  >
+                    Newsletter
+                  </Link>
+                  <Link 
+                    to="/templates" 
+                    className="text-foreground hover:text-primary transition-colors"
+                  >
+                    Templates
+                  </Link>
+                </nav>
+                <Button 
+                  variant="ghost" 
                   onClick={() => setIsDark(!isDark)}
                   className="h-9 w-9"
                 >
@@ -283,161 +335,165 @@ function App() {
           </header>
 
           <main className="flex-1 container mx-auto px-4 py-8">
-            <div className="flex justify-center mb-4 space-x-4">
-              <button
-                onClick={() => setCurrentView('landing')}
-                className={`
-                  px-4 py-2 rounded-md transition-colors duration-300
-                  ${currentView === 'landing' 
-                    ? 'bg-primary text-primary-foreground' 
-                    : 'hover:bg-accent hover:text-accent-foreground'
-                  }
-                `}
-              >
-                Home
-              </button>
-              <button
-                onClick={() => setCurrentView('generator')}
-                className={`
-                  px-4 py-2 rounded-md transition-colors duration-300
-                  ${currentView === 'generator' 
-                    ? 'bg-primary text-primary-foreground' 
-                    : 'hover:bg-accent hover:text-accent-foreground'
-                  }
-                `}
-              >
-                Content Generator
-              </button>
-              <button
-                onClick={() => setCurrentView('templates')}
-                className={`
-                  px-4 py-2 rounded-md transition-colors duration-300
-                  ${currentView === 'templates' 
-                    ? 'bg-primary text-primary-foreground' 
-                    : 'hover:bg-accent hover:text-accent-foreground'
-                  }
-                `}
-              >
-                Templates
-              </button>
-              <button
-                onClick={() => setCurrentView('polls')}
-                className={`
-                  px-4 py-2 rounded-md transition-colors duration-300
-                  ${currentView === 'polls' 
-                    ? 'bg-primary text-primary-foreground' 
-                    : 'hover:bg-accent hover:text-accent-foreground'
-                  }
-                `}
-              >
-                Polls
-              </button>
-            </div>
+            <Routes>
+              <Route path="/" element={<LandingPage />} />
+              <Route path="/pricing" element={<PricingPage />} />
+              <Route path="/newsletter" element={<NewsletterPage />} />
+              <Route path="/templates" element={<TemplatesPage />} />
+              <Route path="/generator" element={
+                <div className="max-w-4xl mx-auto p-4">
+                  <Card className="p-6">
+                    <CardContent>
+                      <div className="grid gap-4">
+                        <div>
+                          <label className="block text-sm font-medium mb-2">Topic</label>
+                          <input
+                            type="text"
+                            value={topic}
+                            onChange={handleTopicChange}
+                            placeholder="Enter your content topic"
+                            className="w-full p-2 border rounded dark:bg-gray-800 dark:border-gray-700"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium mb-2">Target Audience</label>
+                          <input
+                            type="text"
+                            value={audience}
+                            onChange={handleAudienceChange}
+                            placeholder="Describe your target audience"
+                            className="w-full p-2 border rounded dark:bg-gray-800 dark:border-gray-700"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium mb-2">Writing Style</label>
+                          <input
+                            type="text"
+                            value={style}
+                            onChange={handleStyleChange}
+                            placeholder="Describe the desired writing style"
+                            className="w-full p-2 border rounded dark:bg-gray-800 dark:border-gray-700"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium mb-2">Additional Guidelines</label>
+                          <textarea
+                            value={guidelines}
+                            onChange={handleGuidelinesChange}
+                            placeholder="Add any specific guidelines or requirements"
+                            className="w-full p-2 border rounded min-h-[100px] dark:bg-gray-800 dark:border-gray-700"
+                          />
+                        </div>
+                        <button
+                          onClick={(e) => {
+                            e.preventDefault();
+                            handleGenerate({
+                              postType: activeTab.replace('-form', ''),
+                              topic,
+                              writingStyle: style,
+                              targetAudience: audience,
+                              additionalGuidelines: guidelines
+                            });
+                          }}
+                          disabled={isLoading}
+                          className="w-full bg-primary text-primary-foreground p-2 rounded hover:bg-primary/90 transition-colors"
+                        >
+                          {isLoading ? 'Generating...' : 'Generate Content'}
+                        </button>
+                      </div>
+                    </CardContent>
 
-            {currentView === 'generator' && (
-              <div className="max-w-4xl mx-auto p-4">
-                <Card className="p-6">
-                  <CardContent>
-                    <div className="grid gap-4">
-                      <div>
-                        <label className="block text-sm font-medium mb-2">Topic</label>
-                        <input
-                          type="text"
-                          value={topic}
-                          onChange={handleTopicChange}
-                          placeholder="Enter your content topic"
-                          className="w-full p-2 border rounded"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium mb-2">Target Audience</label>
-                        <input
-                          type="text"
-                          value={audience}
-                          onChange={handleAudienceChange}
-                          placeholder="Describe your target audience"
-                          className="w-full p-2 border rounded"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium mb-2">Writing Style</label>
-                        <input
-                          type="text"
-                          value={style}
-                          onChange={handleStyleChange}
-                          placeholder="Describe the desired writing style"
-                          className="w-full p-2 border rounded"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium mb-2">Additional Guidelines</label>
-                        <textarea
-                          value={guidelines}
-                          onChange={handleGuidelinesChange}
-                          placeholder="Any specific guidelines or requirements"
-                          className="w-full p-2 border rounded"
-                          rows={3}
-                        />
-                      </div>
-                      <button
-                        onClick={handleGenerate}
-                        disabled={isLoading}
-                        className="w-full bg-primary text-primary-foreground p-2 rounded hover:bg-primary/90 transition-colors"
+                    <Tabs defaultValue={activeTab} onValueChange={setActiveTab} className="w-full mt-4">
+                      <TabsList className="grid w-full grid-cols-4 mb-8">
+                        <TabsTrigger value="short-form" onClick={() => setActiveTab('short-form')}>
+                          <FileText className="w-4 h-4 mr-2" />
+                          Short-Form
+                        </TabsTrigger>
+                        <TabsTrigger value="long-form" onClick={() => setActiveTab('long-form')}>
+                          <FileText className="w-4 h-4 mr-2" />
+                          Long-Form
+                        </TabsTrigger>
+                        <TabsTrigger value="threads" onClick={() => setActiveTab('threads')}>
+                          <MessageSquare className="w-4 h-4 mr-2" />
+                          Threads
+                        </TabsTrigger>
+                        <TabsTrigger value="polls" onClick={() => setActiveTab('polls')}>
+                          <PieChart className="w-4 h-4 mr-2" />
+                          Polls
+                        </TabsTrigger>
+                      </TabsList>
+                      
+                      <TabsContent value="short-form">
+                        <Card>
+                          <CardContent className="mt-6">
+                            
+                          </CardContent>
+                        </Card>
+                      </TabsContent>
+                      <TabsContent value="long-form">
+                        <Card>
+                          <CardContent className="mt-6">
+                            
+                          </CardContent>
+                        </Card>
+                      </TabsContent>
+                      <TabsContent value="threads">
+                        <Card>
+                          <CardContent className="mt-6">
+                            
+                          </CardContent>
+                        </Card>
+                      </TabsContent>
+                      <TabsContent value="polls">
+                        <Card>
+                          <CardContent className="mt-6">
+                            <Polls />
+                          </CardContent>
+                        </Card>
+                      </TabsContent>
+                    </Tabs>
+
+                    {isLoading && (
+                      <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="mt-8"
                       >
-                        {isLoading ? 'Generating...' : 'Generate Content'}
-                      </button>
-                    </div>
-                  </CardContent>
+                        <AILoader isLoading={isLoading} />
+                      </motion.div>
+                    )}
 
-                  <Tabs defaultValue={activeTab} onValueChange={setActiveTab} className="w-full mt-4">
-                    <TabsList className="grid w-full grid-cols-3">
-                      <TabsTrigger value="short-form" className="text-sm">Short Form</TabsTrigger>
-                      <TabsTrigger value="long-form" className="text-sm">Long Form</TabsTrigger>
-                      <TabsTrigger value="thread" className="text-sm">Threads</TabsTrigger>
-                    </TabsList>
-                    
-                 
-                    
-                   
-                  </Tabs>
-
-                  {isLoading && (
-                    <motion.div
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      className="mt-8"
-                    >
-                      <AILoader isLoading={isLoading} />
-                    </motion.div>
-                  )}
-
-                  {generatedContent && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -20 }}
-                      className="mt-8"
-                    >
-                      <GeneratedContent
-                        activeTab={activeTab}
-                        content={generatedContent}
-                        onClear={() => setGeneratedContent('')}
-                        onRegenerate={handleGenerate}
-                        isLoading={isLoading}
-                        preferences={userPreferences}
-                      />
-                    </motion.div>
-                  )}
-                </Card>
-              </div>
-            )}
-
-            {currentView === 'landing' && <LandingPage />}
-            
-            {currentView === 'templates' && <TemplatesPage />}
-            {currentView === 'polls' && <Polls />}
-            {currentView === 'pricing' && <PricingPage />}
+                    {generatedContent && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -20 }}
+                        className="mt-8"
+                      >
+                        <GeneratedContent 
+                          activeTab={activeTab}
+                          content={generatedContent}
+                          onClear={handleClear}
+                          onRegenerate={() => handleGenerate({
+                            postType: activeTab.replace('-form', ''),
+                            topic,
+                            writingStyle: style,
+                            targetAudience: audience,
+                            additionalGuidelines: guidelines
+                          })}
+                          isLoading={isLoading}
+                          preferences={userPreferences}
+                          templateTargetAudience={audience}
+                          templateWritingStyle={style}
+                          templateAdditionalGuidelines={guidelines}
+                        />
+                      </motion.div>
+                    )}
+                  </Card>
+                </div>
+              } />
+            </Routes>
           </main>
 
           <Footer className="mt-auto" />
@@ -448,6 +504,7 @@ function App() {
           onClose={handleClosePreferences}
           onSave={handleSavePreferences}
           onNavigate={setCurrentView}
+          errors={errors}
         />
       </MainLayout>
     </HelmetProvider>

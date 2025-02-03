@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Copy, Image as LucideImage } from 'lucide-react';
+import { Copy, Image as LucideImage, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export interface ThreadPostProps {
   id: string;
   content: string;
+  characterCount: number;
   author?: string;
   timestamp?: string;
   onCopy?: (id: string) => void;
@@ -15,6 +16,7 @@ export interface ThreadPostProps {
 export const ThreadPost: React.FC<ThreadPostProps> = ({
   id,
   content,
+  characterCount,
   author = 'AI Assistant',
   timestamp = new Date().toLocaleString(),
   onCopy,
@@ -49,30 +51,36 @@ export const ThreadPost: React.FC<ThreadPostProps> = ({
             size="icon" 
             onClick={handleCopy}
             className={`
-              ${isCopied ? 'text-green-500' : 'text-gray-500'}
-              hover:bg-gray-100 dark:hover:bg-gray-700
+              transition-colors duration-200
+              ${isCopied ? 'bg-green-100 dark:bg-green-900' : 'hover:bg-gray-100 dark:hover:bg-gray-700'}
             `}
-            aria-label="Copy thread content"
           >
-            <Copy className="h-4 w-4" />
+            {isCopied ? (
+              <Check className="h-4 w-4 text-green-500" />
+            ) : (
+              <Copy className="h-4 w-4 text-gray-500" />
+            )}
           </Button>
           {onGenerateImage && (
-            <Button 
-              variant="outline" 
-              size="icon" 
+            <Button
+              variant="outline"
+              size="icon"
               onClick={() => onGenerateImage(id)}
-              className="text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700"
-              aria-label="Generate image for thread"
+              className="hover:bg-gray-100 dark:hover:bg-gray-700"
             >
-              <LucideImage className="h-4 w-4" />
+              <LucideImage className="h-4 w-4 text-gray-500" />
             </Button>
           )}
         </div>
       </div>
       
-      <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
-        {content}
-      </p>
+      <div className="prose dark:prose-invert max-w-none">
+        <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{content}</p>
+      </div>
+      
+      <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+        {characterCount}/280 characters
+      </div>
     </motion.div>
   );
 };

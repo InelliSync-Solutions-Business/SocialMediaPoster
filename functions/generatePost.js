@@ -1,12 +1,30 @@
 import { OpenAI } from 'openai';
 import dotenv from 'dotenv';
+import { SYSTEM_PROMPT } from '../src/utils/prompts/systemPrompt';
+import CONTENT_PROMPTS from '../src/utils/prompts/contentPrompts';
 
 dotenv.config();
 
-// Helper function to build prompt
-function buildPrompt({ postType, topic, audience, style, guidelines }) {
-  return `Create a ${postType} about ${topic} targeting ${audience} in a ${style} tone. 
-  Follow these guidelines: ${guidelines}`;
+const CONTENT_PROMPTS_MAP = {
+  image: CONTENT_PROMPTS.imagePrompt,
+  poll: CONTENT_PROMPTS.pollsPrompt,
+  longForm: CONTENT_PROMPTS.longFormPrompt,
+  shortForm: CONTENT_PROMPTS.shortFormPrompt
+};
+
+function buildPrompt(postType, params) {
+  const contentPrompt = CONTENT_PROMPTS_MAP[postType] ?? '';
+  
+  // Format the user input based on post type
+  const formattedInput = params.userInput || '';
+
+  const prompt = [
+    SYSTEM_PROMPT,
+    contentPrompt,
+    formattedInput
+  ].filter(p => p.trim()).join('\n\n');
+  
+  return prompt;
 }
 
 export const handler = async (event, context) => {
@@ -18,20 +36,56 @@ export const handler = async (event, context) => {
   }
 
   try {
-    const { postType, topic, audience, style, guidelines } = JSON.parse(event.body);
-    console.log('Received request:', { postType, topic, audience, style, guidelines });
+    const { 
+      postType, 
+      topic, 
+      targetAudience, 
+      writingStyle, 
+      additionalGuidelines, 
+      selectedTemplate,
+      tone,
+      length,
+      userInput
+    } = JSON.parse(event.body);
+    
+    console.log('Received request:', { 
+      postType, 
+      topic, 
+      targetAudience, 
+      writingStyle, 
+      additionalGuidelines, 
+      selectedTemplate,
+      tone,
+      length,
+      userInput
+    });
 
     const openai = new OpenAI({
       apiKey: process.env.OPENAI_API_KEY
     });
     console.log('OpenAI client initialized');
 
-    const prompt = buildPrompt({ postType, topic, audience, style, guidelines });
-    console.log('Built prompt:', prompt);
+    const prompt = buildPrompt(postType, {
+      topic,
+      targetAudience,
+      writingStyle,
+      additionalGuidelines,
+      tone,
+      length,
+      userInput
+    });
 
     const completion = await openai.chat.completions.create({
       model: "gpt-4o-mini",
-      messages: [{ role: "user", content: prompt }]
+      messages: [
+        { role: 'system', content: prompt }
+      ],
+      temperature: 0.7,
+      max_tokens: postType === 'long' ? 1000 
+        : postType === 'thread' ? 800 
+        : 400,
+      presence_penalty: 0,
+      frequency_penalty: 0
     });
     console.log('OpenAI response received');
 

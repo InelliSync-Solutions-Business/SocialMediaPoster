@@ -1,7 +1,7 @@
-const express = require('express');
-const cors = require('cors');
-const dotenv = require('dotenv');
-const { OpenAI } = require('openai');
+import express from 'express';
+import cors from 'cors';
+import dotenv from 'dotenv';
+import { OpenAI } from 'openai';
 
 dotenv.config();
 
@@ -16,26 +16,61 @@ app.use(cors({
 }));
 app.use(express.json());
 
+// Middleware logging
+app.use((req, res, next) => {
+  console.log(`Received ${req.method} request to ${req.path}`);
+  console.log('Request headers:', req.headers);
+  console.log('Request body:', req.body);
+  next();
+});
+
 // Helper function to build Threaded Post prompt
 function buildPrompt({ postType, topic, audience, style, guidelines }) {
   if (postType === 'thread') {
     return `
-      Generate a multi-post thread for a Twitter-like platform.
-      Topic: ${topic}
-      Target Audience: ${audience}
-      Style: ${style}
-      Guidelines: ${guidelines}
-    `;
+Generate a Twitter thread (4-6 tweets) about the following topic. Each tweet should be separated by "---" and be under 280 characters.
+
+Topic: ${topic}
+Target Audience: ${audience}
+Writing Style: ${style}
+Additional Guidelines: ${guidelines}
+
+Requirements:
+1. Start with a hook tweet that grabs attention
+2. Each tweet should flow naturally to the next
+3. Include relevant emojis where appropriate
+4. End with a call-to-action
+5. Keep each tweet under 280 characters
+6. Separate tweets with "---"
+
+Example Format:
+🧵 First tweet here...
+---
+Second tweet continues the story...
+---
+Final tweet with call-to-action 🎯
+
+Please generate the thread now:`;
   }
   
   return `
-    Generate a social media post.
-    Post Type: ${postType}
-    Topic: ${topic}
-    Target Audience: ${audience}
-    Style: ${style}
-    Guidelines: ${guidelines}
-  `;
+Generate a social media post.
+Post Type: ${postType}
+Topic: ${topic}
+Target Audience: ${audience}
+Style: ${style}
+Guidelines: ${guidelines}
+`;
+}
+
+// Helper function to parse thread content
+function parseThreadContent(content) {
+  if (!content) return [];
+  const tweets = content.split('---').map(tweet => tweet.trim());
+  return tweets.filter(tweet => tweet.length > 0).map(tweet => ({
+    content: tweet,
+    characterCount: tweet.length
+  }));
 }
 
 // Generate post endpoint
@@ -81,12 +116,10 @@ Core Objectives:
 - Ensure content is platform-specific and meets each platform's best practices
 
 Platform Considerations:
-- Instagram: Consider image generation and hashtag suggestions
+- Twitter: Craft concise, impactful messages under 280 characters
 - LinkedIn: Maintain a professional tone
-- Twitter: Craft concise, impactful messages
-- TikTok: Create trendy, engaging content
 - Facebook: Balance informative and conversational styles
-- Discord: Adapt to community-specific communication norms
+- Instagram: Consider visual appeal and hashtag suggestions
 
 Tone Flexibility:
 Adjust content tone to match user preference:
@@ -95,15 +128,11 @@ Adjust content tone to match user preference:
 - Inspirational: Motivational, uplifting, encouraging
 - Humorous: Witty, light-hearted, entertaining
 
-Technical and Ethical Guidelines:
-- Prioritize clarity and engagement
-- Avoid sensitive or controversial topics
-- Respect platform-specific content guidelines
-- Maintain user privacy and confidentiality
-
-Performance Expectations:
-- Generate content quickly and efficiently
-- Offer suggestions for content optimization`
+Technical Guidelines:
+- For threads: Separate each tweet with "---"
+- Keep tweets under 280 characters
+- Use emojis appropriately
+- Include calls-to-action`
         },
         {
           role: 'user',
@@ -113,10 +142,22 @@ Performance Expectations:
     });
     console.log('OpenAI response received');
 
-    res.json({
-      success: true,
-      content: completion.choices[0].message.content.trim()
-    });
+    const generatedContent = completion.choices[0].message.content.trim();
+    
+    // Handle thread format if applicable
+    if (postType === 'thread') {
+      const threadPosts = parseThreadContent(generatedContent);
+      res.json({
+        success: true,
+        content: threadPosts,
+        isThread: true
+      });
+    } else {
+      res.json({
+        success: true,
+        content: generatedContent
+      });
+    }
   } catch (error) {
     console.error('Error details:', {
       message: error.message,
@@ -262,6 +303,108 @@ app.post('/api/generate-poll', async (req, res) => {
   }
 });
 
+// Newsletter generation endpoint
+app.post('/api/generate-newsletter', async (req, res) => {
+  try {
+    const { 
+      topic, 
+      length, 
+      writingStyle, 
+      targetAudience, 
+      type, 
+      tone, 
+      additionalGuidelines 
+    } = req.body;
+
+    console.log('Received newsletter generation request:', { 
+      topic, 
+      length, 
+      writingStyle, 
+      targetAudience, 
+      type, 
+      tone, 
+      additionalGuidelines 
+    });
+
+    // Validate OpenAI configuration
+    if (!process.env.OPENAI_API_KEY) {
+      return res.status(500).json({
+        success: false,
+        error: 'OpenAI API key is not configured'
+      });
+    }
+
+    const openai = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY
+    });
+    console.log('OpenAI client initialized');
+
+    const newsletterPrompt = `Generate a ${length || 'medium'} length newsletter about ${topic}.
+The newsletter should be structured with the following parts, each separated by triple hyphens (---):
+
+1. Title: A compelling title for the newsletter
+2. Introduction: A brief introduction to the topic
+3. Main Sections: 2-4 sections, each with a subheading and content
+4. Conclusion: A brief concluding paragraph
+5. Call to Action: A clear next step for readers
+
+Writing Style: ${writingStyle}
+Target Audience: ${targetAudience}
+Newsletter Type: ${type}
+Tone: ${tone || 'professional'}
+${additionalGuidelines ? `Additional Guidelines: ${additionalGuidelines}` : ''}
+
+Format your response exactly like this example:
+Title: Example Newsletter Title
+---
+Introduction: This is the introduction paragraph...
+---
+Section: First Section Title
+Content: This is the content of the first section...
+---
+Section: Second Section Title
+Content: This is the content of the second section...
+---
+Conclusion: This is the conclusion paragraph...
+---
+Call to Action: Here's what you should do next...`;
+
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        { role: 'system', content: newsletterPrompt }
+      ],
+      temperature: 0.8,
+      max_tokens: 4000,
+      presence_penalty: 0.2,
+      frequency_penalty: 0.3
+    });
+    console.log('OpenAI newsletter response received');
+
+    console.log('OpenAI response:', completion.choices[0].message);
+    const content = completion.choices[0].message.content;
+    console.log('Raw content:', content);
+
+    res.status(200).json({
+      content,
+      metadata: {
+        topic,
+        length,
+        writingStyle,
+        targetAudience,
+        type,
+        tone
+      }
+    });
+  } catch (error) {
+    console.error('Error generating newsletter:', error);
+    res.status(500).json({ 
+      success: false,
+      error: error.message 
+    });
+  }
+});
+
 app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+  console.log(`Server is running on port ${PORT}`);
 });

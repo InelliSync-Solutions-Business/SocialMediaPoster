@@ -2,7 +2,15 @@ import React from 'react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import Templates from '@/components/Templates';
 
-const TemplatesPage = () => {
+interface TemplatesPageProps {
+  onTemplateSelect: (template: any, prepopulatedFields: any) => void;
+  onNavigateToGenerator: () => void;
+}
+
+const TemplatesPage: React.FC<TemplatesPageProps> = ({ 
+  onTemplateSelect, 
+  onNavigateToGenerator 
+}) => {
   return (
     <MainLayout>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -16,11 +24,10 @@ const TemplatesPage = () => {
           
           <Templates 
             category="all"
-            onSelect={(template) => {
-              // Handle template selection
-              if (template) {
-                // Navigate to content generator with selected template
-                // This can be implemented using React Router or your preferred navigation method
+            onSelect={(template, prepopulatedFields) => {
+              if (template && prepopulatedFields) {
+                onTemplateSelect(template, prepopulatedFields);
+                onNavigateToGenerator();
               }
             }}
             selected={null}

@@ -1,50 +1,26 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
-  Twitter, 
-  Linkedin, 
-  Facebook, 
-  Instagram, 
-  
-  Youtube, 
-  Copy, 
-  Share2, 
-  Check, 
-  Trash2, 
-  RefreshCw, 
-  Image as ImageIcon, 
-  Info 
+  TwitterIcon, 
+  LinkedinIcon, 
+  FacebookIcon, 
+  InstagramIcon,
+  MessageSquare,
+  Share2,
+  Copy,
+  RefreshCw,
+  Trash2,
+  Loader2,
+  Send,
+  Info
 } from 'lucide-react';
 import { countTokens, getPlatformTokenLimit } from '../utils/tokenUtils';
 import AILoader from './AILoader';
 import { Tooltip } from '@mui/material'; 
 import { ThreadList } from './threads/ThreadList';
 import { ThreadPostProps } from './threads/ThreadPost';
-import { UserPreferences } from '../types/preferences';
-
-interface PlatformFormats {
-  instagram?: {
-    imageGeneration: boolean;
-    hashtagSuggestions: boolean;
-  };
-  linkedin?: {
-    professionalTone: boolean;
-  };
-  twitter?: {
-    characterLimitOptimization: boolean;
-  };
-  tiktok?: {
-    trendingHashtags: boolean;
-  };
-  facebook?: {
-    communityEngagement: boolean;
-  };
-  discord?: {
-    threadedDiscussions: boolean;
-  };
-  templates?: {
-    template?: string;
-  };
-}
+import { UserPreferences, PlatformFormats } from '../types/preferences';
+import { generateImagePrompt } from '@/utils/prompts/imagePrompt';
+import { Platform } from '../utils/platformLimits';
 
 interface GeneratedContentProps {
   activeTab: string;
@@ -53,9 +29,18 @@ interface GeneratedContentProps {
   onRegenerate?: () => void;
   isLoading?: boolean;
   preferences?: UserPreferences;
+  templateTargetAudience?: string;
+  templateWritingStyle?: string;
+  templateAdditionalGuidelines?: string;
 }
 
 type PlatformKey = 'instagram' | 'linkedin' | 'twitter' | 'tiktok' | 'facebook' | 'discord';
+
+export interface ThreadPost {
+  id: string;
+  content: string;
+  characterCount: number;
+}
 
 export const GeneratedContent: React.FC<GeneratedContentProps> = ({ 
   activeTab, 
@@ -63,10 +48,13 @@ export const GeneratedContent: React.FC<GeneratedContentProps> = ({
   onClear, 
   onRegenerate,
   isLoading = false,
-  preferences
+  preferences,
+  templateTargetAudience,
+  templateWritingStyle,
+  templateAdditionalGuidelines
 }) => {
   const [copied, setCopied] = useState(false);
-  const [selectedPlatform, setSelectedPlatform] = useState<string | null>(null);
+  const [selectedPlatform, setSelectedPlatform] = useState<PlatformKey | null>(null);
   const [tokenCount, setTokenCount] = useState(0);
   const [truncatedContent, setTruncatedContent] = useState('');
   const [generatedImageUrl, setGeneratedImageUrl] = useState<string | null>(null);
@@ -77,7 +65,7 @@ export const GeneratedContent: React.FC<GeneratedContentProps> = ({
   const [editableContent, setEditableContent] = useState('');
   const [characterCount, setCharacterCount] = useState(0);
   const [showInfoTooltip, setShowInfoTooltip] = useState(false);
-  const [threads, setThreads] = useState<ThreadPostProps[]>([]);
+  const [threads, setThreads] = useState<ThreadPost[]>([]);
   const [selectedThreadId, setSelectedThreadId] = useState<string | null>(null);
   const [hashtags, setHashtags] = useState<string[]>([]);
 
@@ -85,78 +73,145 @@ export const GeneratedContent: React.FC<GeneratedContentProps> = ({
   const infoIconRef = useRef<HTMLDivElement>(null);
 
   const dummyContent = content || "Your generated content will appear here. Fill out the form and click generate to create new content.";
-  const platformLimit = getPlatformTokenLimit(activeTab);
+  const platformLimit = activeTab === 'thread-form' ? 280 : getPlatformTokenLimit(activeTab);
 
   // Format content based on platform preferences
-  const formatContentForPlatform = (content: string, platform: string) => {
-    if (!preferences?.platformFormats) return content;
-
+  const formatContentForPlatform = (content: string, platform: PlatformKey): string => {
+    if (!content) return '';
     let formattedContent = content;
-  
-    // Type-safe indexing
-    const platformFormat = platform in preferences.platformFormats 
-      ? preferences.platformFormats[platform as PlatformKey] 
-      : undefined;
+    const platformFormat = preferences?.platformFormats?.[platform];
 
-    if (!platformFormat) return content;
-
-    // Type guard to check if the platform format has templates
-    const hasTemplate = (format: any): format is { template?: string } => 
-      format && 'template' in format;
-
-    if (hasTemplate(platformFormat) && platformFormat.template) {
-      // Apply template if it exists
-      formattedContent = platformFormat.template.replace('{{content}}', formattedContent);
-    }
-
-    // Type guard to check if the platform format has hashtagSuggestions
-    const hasHashtagSuggestions = (format: any): format is { hashtagSuggestions: boolean } => 
-      format && 'hashtagSuggestions' in format;
-
-    if (platform === 'instagram' && hasHashtagSuggestions(platformFormat) && platformFormat.hashtagSuggestions) {
-      formattedContent = `${formattedContent}\n\n${hashtags.join(' ')}`;
-    }
-
-    // Similar type guards for other platform-specific formatting
     const hasCharacterLimitOptimization = (format: any): format is { characterLimitOptimization: boolean } => 
       format && 'characterLimitOptimization' in format;
 
     const hasProfessionalTone = (format: any): format is { professionalTone: boolean } => 
       format && 'professionalTone' in format;
 
-    if (platform === 'twitter' && hasCharacterLimitOptimization(platformFormat) && platformFormat.characterLimitOptimization) {
+    // Don't apply character limit optimization for threads
+    if (platform === 'twitter' && activeTab !== 'Threads' && hasCharacterLimitOptimization(platformFormat) && platformFormat.characterLimitOptimization) {
       formattedContent = formattedContent.slice(0, 280);
     }
 
     if (platform === 'linkedin' && hasProfessionalTone(platformFormat) && platformFormat.professionalTone) {
-      // Add professional formatting (e.g., line breaks between paragraphs)
       formattedContent = formattedContent.split('\n').filter(Boolean).join('\n\n');
     }
 
     // Only format as threads if the active tab is specifically for threads
     if (activeTab === 'Threads') {
-      formattedContent = formatThreadedPost(formattedContent);
+      const threads = formatThreadedPost(formattedContent);
+      formattedContent = threads.join('\n\n');
     }
 
     return formattedContent;
   };
 
-  // Apply tone-based styling
-  const getToneStyles = () => {
-    if (!preferences?.tone) return '';
+  // New method to parse and format content with HTML tags
+  const parseContentWithHTMLTags = (content: string): string => {
+    if (!content) return '';
+
+    // Split content into sections, handling both numbered lists and paragraphs
+    const sections = content.split(/\n\n/);
     
-    switch (preferences.tone) {
-      case 'professional':
-        return 'font-serif text-gray-800';
-      case 'casual':
-        return 'font-sans text-gray-700';
-      case 'inspirational':
-        return 'font-sans italic text-indigo-600';
-      case 'humorous':
-        return 'font-sans text-purple-600';
-      default:
-        return '';
+    let htmlContent = '';
+    let headingCount = 0;
+
+    sections.forEach((section, index) => {
+      // Check if the section starts with a number (for numbered lists)
+      const numberMatch = section.match(/^(\d+)\.\s*(.+)/);
+      
+      if (numberMatch) {
+        // If it's a numbered list item, create an <h3> for the first few items
+        if (headingCount < 3) {
+          htmlContent += `<h3>${numberMatch[1]}. ${numberMatch[2]}</h3>`;
+          headingCount++;
+        } else {
+          // After the first 3 headings, use <p> tags
+          htmlContent += `<p>${section}</p>`;
+        }
+      } else {
+        // For regular paragraphs, use <p> tags
+        htmlContent += `<p>${section}</p>`;
+      }
+    });
+
+    return htmlContent;
+  };
+
+  // Thread-specific methods
+  const formatThreadedPost = (content: string): string[] => {
+    if (!content) return [];
+    
+    // If content already contains thread separators, use them
+    if (content.includes('---')) {
+      return content.split('---')
+        .map((tweet, index) => tweet.trim())
+        .filter(tweet => tweet.length > 0)
+        .map((tweet, index) => `${index + 1}/${content.split('---').filter(t => t.trim().length > 0).length} ${tweet}`);
     }
+    
+    // Otherwise, intelligently split the content into threads
+    const MAX_CHARS = 280; // Twitter's character limit
+    const sentences = content.match(/[^.!?]+[.!?]+/g) || [content];
+    const threads: string[] = [];
+    let currentThread = '';
+    
+    for (const sentence of sentences) {
+      const trimmedSentence = sentence.trim();
+      // Account for thread number in character count (e.g., "1/4 ")
+      const threadNumberLength = (threads.length + 2).toString().length * 2 + 2; // "X/Y "
+      const potentialThread = currentThread ? `${currentThread} ${trimmedSentence}` : trimmedSentence;
+      
+      // If adding this sentence would exceed the limit (including thread number), start a new thread
+      if ((potentialThread.length + threadNumberLength) > MAX_CHARS && currentThread) {
+        threads.push(currentThread.trim());
+        currentThread = trimmedSentence;
+      } else {
+        currentThread = potentialThread;
+      }
+    }
+    
+    // Add the last thread if there's content
+    if (currentThread) {
+      threads.push(currentThread.trim());
+    }
+    
+    // Add thread numbers to each thread
+    return threads.map((thread, index) => `${index + 1}/${threads.length} ${thread}`);
+  };
+
+  const parseThreads = (content: string): ThreadPost[] => {
+    // Split content by numbered points (1., 2., 3., etc)
+    const parts = content.split(/\d+\.\s+/);
+    
+    // Get the introduction (everything before the first number)
+    const intro = parts[0];
+    
+    // Get the numbered points (excluding the intro)
+    const points = parts.slice(1);
+    
+    const threads: ThreadPost[] = [];
+    
+    // Add intro as the first thread if it's not empty
+    if (intro.trim()) {
+      threads.push({
+        id: `thread-${0}`,
+        content: intro.trim(),
+        characterCount: intro.trim().length
+      });
+    }
+    
+    // Add each point as a separate thread
+    points.forEach((point, index) => {
+      if (point.trim()) {
+        threads.push({
+          id: `thread-${index + 1}`,
+          content: `${index + 1}. ${point.trim()}`,
+          characterCount: point.trim().length
+        });
+      }
+    });
+    
+    return threads;
   };
 
   useEffect(() => {
@@ -186,12 +241,38 @@ export const GeneratedContent: React.FC<GeneratedContentProps> = ({
   }, [dummyContent, activeTab, selectedPlatform, preferences]);
 
   useEffect(() => {
+    if (!content) {
+      setEditableContent('');
+      setCharacterCount(0);
+      setThreads([]);
+      return;
+    }
+
+    if (activeTab === 'thread-form' && Array.isArray(content)) {
+      // Handle thread format
+      const threadPosts = content.map((post, index) => ({
+        id: `thread-${index}`,
+        content: post.content,
+        characterCount: post.characterCount
+      }));
+      setThreads(threadPosts);
+      setEditableContent(''); // Clear editable content when showing threads
+    } else {
+      // Handle single post format
+      setEditableContent(content);
+      setCharacterCount(content.length);
+      setThreads([]); // Clear threads when showing single post
+    }
+  }, [content, activeTab]);
+
+  useEffect(() => {
     // Convert content to threads when content changes
     if (content && activeTab === 'Threads') {
       const threadContent = formatThreadedPost(content);
-      const newThreads: ThreadPostProps[] = threadContent.split('\n\n').map((content, index) => ({
+      const newThreads: ThreadPostProps[] = threadContent.map((content, index) => ({
         id: `thread-${index + 1}`,
         content: content,
+        characterCount: content.length,
         likes: 0,
         retweets: 0
       }));
@@ -221,9 +302,9 @@ export const GeneratedContent: React.FC<GeneratedContentProps> = ({
     return 'text-red-500';
   };
 
-  const handleShare = async (platform: string) => {
+  const handleShare = async (platform: PlatformKey) => {
     // Check if platform is enabled in preferences
-    if (preferences?.platforms && !preferences.platforms[platform as keyof typeof preferences.platforms]) {
+    if (preferences?.platforms && !preferences.platforms[platform]) {
       console.warn(`Platform ${platform} is disabled in preferences`);
       return;
     }
@@ -258,9 +339,6 @@ export const GeneratedContent: React.FC<GeneratedContentProps> = ({
         break;
       case 'tiktok':
         shareUrl = `https://www.tiktok.com/create/react?text=${shareText}`;
-        break;
-      case 'youtube':
-        shareUrl = `https://www.youtube.com/upload?text=${shareText}`;
         break;
       default:
         console.warn(`Unsupported sharing platform: ${platform}`);
@@ -300,7 +378,7 @@ export const GeneratedContent: React.FC<GeneratedContentProps> = ({
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          prompt: `Create an image that visually represents the following social media content: ${content}`,
+          prompt: generateImagePrompt({ content }),
         })
       });
 
@@ -374,21 +452,6 @@ export const GeneratedContent: React.FC<GeneratedContentProps> = ({
   };
 
   // Thread-specific methods
-  const formatThreadedPost = (content: string): string => {
-    // Break long content into multiple threads if needed
-    const MAX_THREAD_LENGTH = 140; // Twitter-like character limit
-    const threads: string[] = [];
-    
-    let remainingContent = content;
-    while (remainingContent.length > 0) {
-      const threadContent = remainingContent.slice(0, MAX_THREAD_LENGTH);
-      threads.push(threadContent);
-      remainingContent = remainingContent.slice(MAX_THREAD_LENGTH);
-    }
-
-    return threads.join('\n\n');
-  };
-
   const handleCopyThread = (threadId: string) => {
     const thread = threads.find(t => t.id === threadId);
     if (thread) {
@@ -436,9 +499,10 @@ export const GeneratedContent: React.FC<GeneratedContentProps> = ({
     // Convert content to threads when content changes
     if (content && activeTab === 'Threads') {
       const threadContent = formatThreadedPost(content);
-      const newThreads: ThreadPostProps[] = threadContent.split('\n\n').map((content, index) => ({
+      const newThreads: ThreadPostProps[] = threadContent.map((content, index) => ({
         id: `thread-${index + 1}`,
         content: content,
+        characterCount: content.length,
         likes: 0,
         retweets: 0
       }));
@@ -472,21 +536,34 @@ export const GeneratedContent: React.FC<GeneratedContentProps> = ({
     );
   };
 
-  // Render content based on active tab
   const renderContent = () => {
-    const editableContent = content || dummyContent;
+    const contentToRender = truncatedContent || dummyContent;
+    const htmlFormattedContent = parseContentWithHTMLTags(contentToRender);
 
-    switch (activeTab) {
-      case 'Threads':
-        return formatThreadedPost(editableContent);
-      case 'Templates':
-        return content || 'Select a template to generate content.';
-      case 'short-form':
-      case 'long-form':
-      case 'image':
-      default:
-        return editableContent;
-    }
+    return (
+      <div 
+        ref={contentEditableRef}
+        className={`w-full p-4 bg-white/5 rounded-lg border border-gray-200 dark:border-gray-700 ${isEditing ? 'cursor-text' : 'cursor-default'}`}
+        contentEditable={isEditing}
+        suppressContentEditableWarning={true}
+        dangerouslySetInnerHTML={{ __html: htmlFormattedContent }}
+        onClick={() => setIsEditing(true)}
+        onInput={(e) => {
+          // Extract plain text content for editing and tracking
+          const newContent = e.currentTarget.textContent || '';
+          setEditableContent(newContent);
+          setCharacterCount(newContent.length);
+          
+          // Re-parse the edited content to maintain HTML formatting
+          const updatedHtmlContent = parseContentWithHTMLTags(newContent);
+          e.currentTarget.innerHTML = updatedHtmlContent;
+        }}
+        onBlur={() => {
+          setIsEditing(false);
+          // Optional: You can add additional logic here if needed when editing ends
+        }}
+      />
+    );
   };
 
   return (
@@ -496,48 +573,25 @@ export const GeneratedContent: React.FC<GeneratedContentProps> = ({
       </h2>
 
       <div className="bg-secondary/20 dark:bg-[#1a1b26] rounded-lg p-6 border border-border/50 backdrop-blur-sm shadow-soft dark:shadow-[0_0_15px_rgba(0,0,0,0.1)]">
-        <div 
-          ref={contentEditableRef}
-          contentEditable={isEditing}
-          onInput={handleContentEdit}
-          onClick={() => setIsEditing(true)}
-          className={`
-            ${isEditing ? 'border-2 border-blue-500' : 'border-2 border-transparent'}
-            p-2 rounded-md cursor-text
-          `}
-        >
-          {renderContent()}
-        </div>
-
-        {/* Character Count and Info Icon */}
-        <div className="flex items-center justify-between mt-2">
-          <div 
-            ref={infoIconRef}
-            className="relative"
-            onMouseEnter={() => setShowInfoTooltip(true)}
-            onMouseLeave={() => setShowInfoTooltip(false)}
-          >
-            {showInfoTooltip && (
-              <Tooltip 
-                title="Edit your generated content. Formatting and character limits apply based on the selected platform."
-                placement="top"
-              >
-                <span>
-                  <Info className="w-5 h-5 text-gray-500 cursor-help" />
-                </span>
-              </Tooltip>
-            )}
-            {!showInfoTooltip && (
-              <Info className="w-5 h-5 text-gray-500 cursor-help" />
-            )}
-          </div>
-          
+        {activeTab === 'thread-form' && threads.length > 0 ? (
+          <ThreadList 
+            threads={threads} 
+            onCopyThread={(id) => {
+              const thread = threads.find(t => t.id === id);
+              if (thread) {
+                navigator.clipboard.writeText(thread.content);
+              }
+            }}
+            onGenerateThreadImage={handleGenerateThreadImage}
+          />
+        ) : (
+          renderContent()
+        )}
+        
+        <div className="flex justify-between items-center">
           <div className={`text-sm ${getCharacterCountColor()}`}>
             {characterCount} / {platformLimit} characters
           </div>
-        </div>
-
-        <div className="flex space-x-2 items-center">
           {tokenCount > 0 && (
             <div className="text-xs text-foreground/50 mr-4">
               Tokens: {tokenCount}
@@ -552,7 +606,7 @@ export const GeneratedContent: React.FC<GeneratedContentProps> = ({
                 transition-colors duration-300
               `}
             >
-              <Twitter size={20} />
+              <TwitterIcon size={20} />
             </button>
           </TooltipWrapper>
           
@@ -565,20 +619,19 @@ export const GeneratedContent: React.FC<GeneratedContentProps> = ({
                 transition-colors duration-300
               `}
             >
-              <Linkedin size={20} />
+              <LinkedinIcon size={20} />
             </button>
           </TooltipWrapper>
           
           <TooltipWrapper title="Share on Facebook" disabled={isLoading}>
             <button 
               onClick={() => handleShare('facebook')}
-              className={`
-                p-2 rounded-full 
-                ${selectedPlatform === 'facebook' ? 'bg-[#1877F2] text-white' : 'hover:bg-secondary/50 dark:hover:bg-secondary/20'}
-                transition-colors duration-300
-              `}
+              className={`p-2 rounded-lg transition-colors duration-200
+              ${selectedPlatform === 'facebook' ? 'bg-[#1877F2] text-white' : 'hover:bg-secondary/50 dark:hover:bg-secondary/20'}
+              ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+              disabled={isLoading}
             >
-              <Facebook size={20} />
+              <FacebookIcon size={20} />
             </button>
           </TooltipWrapper>
           
@@ -591,24 +644,11 @@ export const GeneratedContent: React.FC<GeneratedContentProps> = ({
                 transition-colors duration-300
               `}
             >
-              <Instagram size={20} />
+              <InstagramIcon size={20} />
             </button>
           </TooltipWrapper>
           
         
-          
-          <TooltipWrapper title="Share on YouTube" disabled={isLoading}>
-            <button 
-              onClick={() => handleShare('youtube')}
-              className={`
-                p-2 rounded-full 
-                ${selectedPlatform === 'youtube' ? 'bg-[#FF0000] text-white' : 'hover:bg-secondary/50 dark:hover:bg-secondary/20'}
-                transition-colors duration-300
-              `}
-            >
-              <Youtube size={20} />
-            </button>
-          </TooltipWrapper>
           
           <TooltipWrapper title="Copy Content" disabled={isLoading}>
             <button 
@@ -619,7 +659,7 @@ export const GeneratedContent: React.FC<GeneratedContentProps> = ({
                 transition-colors duration-300
               `}
             >
-              {copied ? <Check size={20} /> : <Copy size={20} />}
+              {copied ? <Send size={20} /> : <Copy size={20} />}
             </button>
           </TooltipWrapper>
 
@@ -656,7 +696,7 @@ export const GeneratedContent: React.FC<GeneratedContentProps> = ({
                 transition-colors duration-300
               `}
             >
-              <ImageIcon size={20} />
+              <Loader2 size={20} />
             </button>
           </TooltipWrapper>
 
@@ -672,17 +712,6 @@ export const GeneratedContent: React.FC<GeneratedContentProps> = ({
           </TooltipWrapper>
         </div>
       </div>
-
-      {threads.length > 0 && (
-        <div className="mt-4">
-          <h3 className="text-lg font-semibold mb-2 dark:text-gray-200">Threaded Posts</h3>
-          <ThreadList 
-            threads={threads}
-            onCopyThread={handleCopyThread}
-            onGenerateThreadImage={handleGenerateThreadImage}
-          />
-        </div>
-      )}
 
       {(generatedImageUrl || isGeneratingImage) && (
         <div className="w-full flex flex-col items-center justify-center gap-4 mt-4">

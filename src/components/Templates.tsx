@@ -31,7 +31,11 @@ interface TemplateCategory {
 
 interface TemplatesProps {
   category: string;
-  onSelect: (template: Template | null) => void;
+  onSelect: (template: Template | null, prepopulatedFields?: {
+    targetAudience: string;
+    writingStyle: string;
+    additionalGuidelines: string;
+  }) => void;
   selected: Template | null;
 }
 
@@ -385,163 +389,212 @@ const Templates: React.FC<TemplatesProps> = ({ category, onSelect, selected }) =
       ]
     },
     {
-      id: 'educational-content',
-      title: 'Educational Content',
-      description: 'Comprehensive learning resources and educational materials',
-      status: 'coming-soon',
-      isDisabled: true,
+      id: 'tech-innovation',
+      title: 'Tech & Innovation Insights',
+      description: 'Cutting-edge content exploring technological advancements, innovation trends, and digital transformation',
+      status: 'active',
       subcategories: [
         {
-          id: 'academic-insights',
-          title: 'Academic & Professional Learning',
-          description: 'In-depth educational content for professionals and learners',
-          templates: [
-            {
-              id: 'educational-long-form',
-              title: 'Educational Deep Dive',
-              description: 'Comprehensive post explaining a complex topic',
-              category: 'Educational Content',
-              tag: 'Education',
-              postType: 'long',
-              audience: 'Students, professionals seeking in-depth knowledge',
-              style: 'Academic, informative, and engaging',
-              guidelines: 'Break down complex concepts, use clear explanations, include relevant examples and research'
-            }
-          ]
-        },
-        {
-          id: 'skill-development',
-          title: 'Skill Development & Tutorials',
-          description: 'Practical guides and learning resources',
-          templates: [
-            {
-              id: 'step-by-step-tutorial',
-              title: 'Step-by-Step Learning Guide',
-              description: 'Detailed tutorial on mastering a specific skill',
-              category: 'Educational Content',
-              tag: 'Education',
-              postType: 'thread',
-              audience: 'Learners, professionals looking to upskill',
-              style: 'Clear, instructional, and encouraging',
-              guidelines: 'Break down complex processes, provide actionable steps, include practical tips'
-            }
-          ]
-        }
-      ]
-    },
-    {
-      id: 'technology-innovation',
-      title: 'Technology & Innovation',
-      description: 'Cutting-edge insights and thought leadership in technology',
-      status: 'coming-soon',
-      isDisabled: true,
-      subcategories: [
-        {
-          id: 'ai-insights',
+          id: 'ai-tech-trends',
           title: 'AI and Emerging Technologies',
-          description: 'Cutting-edge insights into artificial intelligence and tech trends',
+          description: 'In-depth exploration of artificial intelligence, machine learning, and transformative tech trends',
           templates: [
             {
-              id: 'ai-innovation-long',
-              title: 'AI and Future Technologies',
-              description: 'In-depth exploration of technological innovations',
+              id: 'ai-industry-impact',
+              title: 'AI Transformation in Industry',
+              description: 'Analyzing how AI is revolutionizing different sectors and business models',
               category: 'Educational Content',
-              tag: 'Business',
+              tag: 'Education',
               postType: 'long',
-              audience: 'Tech enthusiasts, professionals, researchers',
-              style: 'Intellectual, forward-thinking, and accessible',
-              guidelines: 'Explain complex AI concepts, provide real-world applications, discuss ethical considerations'
+              audience: 'Tech professionals, business leaders, innovators',
+              style: 'Analytical, forward-thinking, and insightful',
+              guidelines: 'Provide concrete examples, discuss potential challenges and opportunities, highlight real-world AI applications'
             },
             {
-              id: 'tech-startup-short',
-              title: 'Tech Startup Announcement',
-              description: 'Concise, exciting post for a tech product launch',
-              category: 'Professional',
-              tag: 'Business',
-              postType: 'short',
-              audience: 'Tech professionals, early adopters, startup enthusiasts',
-              style: 'Professional, innovative, and slightly provocative',
-              guidelines: 'Highlight unique value proposition, use technical but accessible language, include a call-to-action'
+              id: 'emerging-tech-deep-dive',
+              title: 'Deep Dive: Emerging Technology Landscape',
+              description: 'Comprehensive overview of cutting-edge technologies shaping the future',
+              category: 'Educational Content',
+              tag: 'Education',
+              postType: 'thread',
+              audience: 'Tech enthusiasts, students, professionals',
+              style: 'Informative, engaging, and accessible',
+              guidelines: 'Break down complex tech concepts, use analogies, provide visual explanations, discuss potential societal impact'
             }
           ]
         },
         {
-          id: 'tech-trends',
-          title: 'Technology Trends',
-          description: 'Exploring current and emerging technological trends',
+          id: 'web-development-insights',
+          title: 'Web Development & Frameworks',
+          description: 'Expert insights into modern web development technologies, frameworks, and best practices',
           templates: [
             {
-              id: 'industry-tech-trends',
-              title: 'Tech Industry Trends Analysis',
-              description: 'Comprehensive overview of current technological shifts',
+              id: 'react-vue-comparison',
+              title: 'React vs Vue: Choosing the Right Framework',
+              description: 'Comparative analysis of React and Vue for modern web development',
+              category: 'Educational Content',
+              tag: 'Education',
+              postType: 'long',
+              audience: 'Web developers, students, tech decision-makers',
+              style: 'Technical, balanced, and practical',
+              guidelines: 'Provide objective comparison, discuss pros and cons, offer context-based recommendations'
+            },
+            {
+              id: 'frontend-performance-optimization',
+              title: 'Frontend Performance Optimization Techniques',
+              description: 'Advanced strategies for improving web application performance',
+              category: 'Educational Content',
+              tag: 'Education',
+              postType: 'long',
+              audience: 'Web developers, performance engineers',
+              style: 'Technical, detailed, solution-oriented',
+              guidelines: 'Provide code examples, discuss measurement techniques, offer actionable optimization strategies'
+            }
+          ]
+        },
+        {
+          id: 'innovation-case-studies',
+          title: 'Innovation Case Studies',
+          description: 'Real-world examples of technological innovation and digital transformation',
+          templates: [
+            {
+              id: 'startup-innovation-journey',
+              title: 'Startup Innovation Journey',
+              description: 'Detailed exploration of how startups drive technological innovation',
               category: 'Professional',
               tag: 'Business',
               postType: 'long',
-              audience: 'Tech industry professionals, investors, strategists',
-              style: 'Analytical, forward-looking, and insightful',
-              guidelines: 'Provide data-driven insights, highlight key industry transformations, predict future directions'
+              audience: 'Entrepreneurs, investors, tech enthusiasts',
+              style: 'Narrative-driven, inspirational, analytical',
+              guidelines: 'Tell a compelling story, highlight key challenges and breakthroughs, provide strategic insights'
             }
           ]
         }
       ]
     },
     {
-      id: 'creative-writing',
-      title: 'Creative Writing & Storytelling',
-      description: 'Inspiring narratives and creative expression',
-      status: 'coming-soon',
-      isDisabled: true,
+      id: 'educational-content',
+      title: 'Educational & Professional Development',
+      description: 'Comprehensive learning resources for digital tech, professional skills, and career growth',
+      status: 'active',
       subcategories: [
         {
-          id: 'personal-journeys',
-          title: 'Personal Narratives',
-          description: 'Authentic stories of personal growth and experience',
+          id: 'digital-skills-learning',
+          title: 'Digital Skills & Career Development',
+          description: 'Practical guidance for developing essential digital skills and advancing professional careers',
           templates: [
             {
-              id: 'startup-journey-thread',
-              title: 'Startup Journey Narrative',
-              description: 'Multi-part story about entrepreneurial experience',
-              category: 'Casual & Engaging',
-              tag: 'Business',
+              id: 'tech-career-roadmap',
+              title: 'Tech Career Roadmap & Skill Development',
+              description: 'Comprehensive guide to building a successful career in technology',
+              category: 'Educational Content',
+              tag: 'Education',
               postType: 'thread',
-              audience: 'Entrepreneurs, startup founders, business students',
-              style: 'Personal, authentic, motivational',
-              guidelines: 'Share personal insights, be vulnerable, provide actionable advice, maintain narrative flow across thread'
+              audience: 'Students, early-career professionals, career changers',
+              style: 'Motivational, structured, actionable',
+              guidelines: 'Provide clear learning paths, recommend resources, discuss skill progression, offer industry insights'
             },
             {
-              id: 'mental-health-awareness-thread',
-              title: 'Mental Health Journey',
-              description: 'Comprehensive discussion on mental wellness',
+              id: 'learning-tech-efficiently',
+              title: 'Efficient Learning Strategies for Tech Professionals',
+              description: 'Techniques and approaches for continuous learning in a rapidly evolving tech landscape',
+              category: 'Educational Content',
+              tag: 'Education',
+              postType: 'long',
+              audience: 'Tech professionals, lifelong learners',
+              style: 'Practical, evidence-based, motivational',
+              guidelines: 'Share learning techniques, discuss effective resources, provide psychological insights into skill acquisition'
+            }
+          ]
+        },
+        {
+          id: 'industry-certifications',
+          title: 'Professional Certifications & Credentials',
+          description: 'Guidance on obtaining and leveraging professional certifications in tech',
+          templates: [
+            {
+              id: 'certification-strategy',
+              title: 'Strategic Certification Planning',
+              description: 'How to choose and pursue relevant professional certifications',
+              category: 'Educational Content',
+              tag: 'Education',
+              postType: 'long',
+              audience: 'Professionals seeking career advancement',
+              style: 'Strategic, informative, goal-oriented',
+              guidelines: 'Compare certification programs, discuss ROI, provide selection criteria, share preparation tips'
+            }
+          ]
+        }
+      ]
+    },
+    {
+      id: 'community-building',
+      title: 'Personalized Community & Engagement',
+      description: 'Strategies for building meaningful connections, fostering engagement, and creating value-driven communities',
+      status: 'active',
+      subcategories: [
+        {
+          id: 'audience-connection',
+          title: 'Audience Connection & Personalization',
+          description: 'Techniques for creating personalized, authentic, and engaging content',
+          templates: [
+            {
+              id: 'personalized-storytelling',
+              title: 'Personalized Community Storytelling',
+              description: 'Crafting narratives that resonate with specific audience segments',
               category: 'Casual & Engaging',
               tag: 'General',
               postType: 'thread',
-              audience: 'Young professionals, mental health advocates',
-              style: 'Empathetic, personal, supportive',
-              guidelines: 'Share personal experiences, provide resources, reduce stigma, offer hope and support'
+              audience: 'Community members, potential followers',
+              style: 'Authentic, empathetic, conversational',
+              guidelines: 'Use personal anecdotes, address specific pain points, demonstrate genuine understanding'
+            },
+            {
+              id: 'community-value-creation',
+              title: 'Community Value Creation Strategies',
+              description: 'Building and nurturing engaged, supportive online communities',
+              category: 'Casual & Engaging',
+              tag: 'General',
+              postType: 'long',
+              audience: 'Community leaders, content creators, entrepreneurs',
+              style: 'Insightful, strategic, actionable',
+              guidelines: 'Discuss engagement techniques, share community management best practices, provide real-world examples'
             }
           ]
         },
         {
-          id: 'creative-process',
-          title: 'Creative Process & Inspiration',
-          description: 'Insights into creativity, artistic expression, and inspiration',
+          id: 'interactive-content',
+          title: 'Interactive Content & Engagement',
+          description: 'Creating content that encourages participation, dialogue, and community interaction',
           templates: [
             {
-              id: 'creative-industry-thread',
-              title: 'Creative Process Unveiled',
-              description: 'Behind-the-scenes look at creative work',
+              id: 'community-challenge',
+              title: 'Community Challenge & Growth Initiatives',
+              description: 'Designing interactive challenges that foster learning and connection',
               category: 'Casual & Engaging',
-              tag: 'Education',
-              postType: 'thread',
-              audience: 'Artists, designers, creative professionals',
-              style: 'Inspirational, vulnerable, step-by-step',
-              guidelines: 'Show creative process, share challenges and breakthroughs, inspire other creatives'
+              tag: 'General',
+              postType: 'short',
+              audience: 'Community members, potential participants',
+              style: 'Motivational, clear, exciting',
+              guidelines: 'Define clear objectives, provide simple participation rules, highlight potential benefits'
             }
           ]
         }
       ]
     }
   ];
+
+  const handleTemplateSelect = (template: Template) => {
+    // Pre-populate fields based on the selected template
+    const prepopulatedFields = {
+      targetAudience: template.audience,
+      writingStyle: template.style,
+      additionalGuidelines: template.guidelines
+    };
+
+    onSelect(template, prepopulatedFields);
+    setExpandedCategory(null); // Optional: collapse categories after selection
+  };
 
   return (
     <div className="space-y-6">
@@ -595,37 +648,31 @@ const Templates: React.FC<TemplatesProps> = ({ category, onSelect, selected }) =
                     {subcategory.templates.map((template) => (
                       <div 
                         key={template.id}
-                        onClick={() => onSelect(template)}
+                        onClick={() => handleTemplateSelect(template)}
                         className="
                           cursor-pointer 
                           p-4 
+                          hover:bg-gray-100 
+                          dark:hover:bg-gray-800 
                           rounded-lg 
-                          border 
-                          border-border/30 
-                          hover:border-primary/50 
-                          transition-all 
-                          duration-300 
-                          hover:shadow-lg 
-                          dark:hover:shadow-[0_0_20px_rgba(255,255,255,0.1)]
-                          bg-background 
-                          dark:bg-secondary/10
-                          hover:bg-primary/5
-                          dark:hover:bg-primary/10
+                          transition-colors 
+                          duration-200 
+                          ease-in-out
+                          ${selected?.id === template.id ? 'bg-blue-50 dark:bg-blue-900' : ''}
                         "
                       >
-                        <h4 className="text-md font-semibold mb-2 text-foreground/80 dark:text-foreground/90">
-                          {template.title}
-                        </h4>
-                        <p className="text-sm text-foreground/60 dark:text-foreground/70 mb-4">
-                          {template.description}
-                        </p>
                         <div className="flex justify-between items-center">
-                          <span className="text-xs px-2 py-1 rounded-full bg-secondary/30 dark:bg-secondary/20 text-foreground/70">
-                            {template.postType}
-                          </span>
-                          <span className="text-xs px-2 py-1 rounded-full bg-primary/10 dark:bg-primary/20 text-primary/70">
-                            {template.tag}
-                          </span>
+                          <div>
+                            <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200">
+                              {template.title}
+                            </h3>
+                            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                              {template.description}
+                            </p>
+                          </div>
+                          {selected?.id === template.id && (
+                            <Badge variant="secondary">Selected</Badge>
+                          )}
                         </div>
                       </div>
                     ))}

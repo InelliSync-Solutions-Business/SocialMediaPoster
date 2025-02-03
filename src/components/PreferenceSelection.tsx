@@ -13,6 +13,7 @@ import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
   Instagram, 
   Linkedin, 
@@ -24,6 +25,7 @@ import {
   CreditCard 
 } from 'lucide-react';
 import { UserPreferences } from '../types/preferences';
+import { ErrorDisplay } from './ErrorDisplay';
 
 type ViewType = 'generator' | 'landing' | 'polls' | 'pricing' | 'templates';
 
@@ -32,13 +34,15 @@ interface PreferenceSelectionProps {
   onClose: () => void;
   onSave: (preferences: UserPreferences) => void;
   onNavigate: (view: ViewType) => void;
+  errors?: string[];
 }
 
 const PreferenceSelection: React.FC<PreferenceSelectionProps> = ({
   open,
   onClose,
   onSave,
-  onNavigate
+  onNavigate,
+  errors
 }) => {
   const [preferences, setPreferences] = useState<UserPreferences>({
     platforms: {
@@ -76,7 +80,17 @@ const PreferenceSelection: React.FC<PreferenceSelectionProps> = ({
       educational: true,
       promotional: true,
       personal: true
-    }
+    },
+    contentLength: 'medium',
+    defaultWritingStyle: 'conversational',
+    defaultAudience: 'tech',
+    defaultGuidelines: [
+      'Maintain brand voice consistency',
+      'Include relevant industry keywords',
+      'Adhere to platform character limits',
+      'Use inclusive language',
+      'Follow SEO best practices'
+    ]
   });
 
   const handleSave = () => {
@@ -87,6 +101,9 @@ const PreferenceSelection: React.FC<PreferenceSelectionProps> = ({
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[600px]">
+        {errors && errors.length > 0 && (
+          <ErrorDisplay errors={errors} />
+        )}
         <DialogHeader>
           <DialogTitle>Content Preferences</DialogTitle>
           <DialogDescription>
@@ -184,31 +201,50 @@ const PreferenceSelection: React.FC<PreferenceSelectionProps> = ({
 
             {/* Tone Selection */}
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Content Tone</h3>
-              <RadioGroup
-                value={preferences.tone}
-                onValueChange={(value: any) =>
-                  setPreferences({ ...preferences, tone: value })
-                }
-                className="grid grid-cols-2 gap-4"
-              >
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="professional" id="professional" />
-                  <Label htmlFor="professional">Professional</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="casual" id="casual" />
-                  <Label htmlFor="casual">Casual</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="inspirational" id="inspirational" />
-                  <Label htmlFor="inspirational">Inspirational</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="humorous" id="humorous" />
-                  <Label htmlFor="humorous">Humorous</Label>
-                </div>
-              </RadioGroup>
+              <div className="space-y-2">
+                <Label>Tone</Label>
+                <Select
+                  value={preferences.tone}
+                  onValueChange={(value) =>
+                    setPreferences({
+                      ...preferences,
+                      tone: value as UserPreferences['tone']
+                    })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select tone" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="professional">Professional</SelectItem>
+                    <SelectItem value="casual">Casual</SelectItem>
+                    <SelectItem value="inspirational">Inspirational</SelectItem>
+                    <SelectItem value="humorous">Humorous</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Content Length</Label>
+                <Select
+                  value={preferences.contentLength}
+                  onValueChange={(value) =>
+                    setPreferences({
+                      ...preferences,
+                      contentLength: value as UserPreferences['contentLength']
+                    })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select content length" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="short">Short</SelectItem>
+                    <SelectItem value="medium">Medium</SelectItem>
+                    <SelectItem value="long">Long</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
             {/* Content Types */}
