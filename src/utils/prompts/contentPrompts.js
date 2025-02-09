@@ -2,25 +2,44 @@
 
 const CONTENT_PROMPTS = {
   newsletter: {
-    standard: `Create a professional newsletter that effectively communicates the following topic. 
-    Focus on delivering value to the readers through well-structured, engaging content.
-    Include relevant insights, updates, and actionable takeaways where appropriate.`,
+    professional: `Create a professional newsletter that demonstrates expertise and credibility.
+    Focus on delivering high-quality, authoritative content with clear, concise language.
+    Include data-driven insights, expert analysis, and strategic recommendations.
+    Maintain a formal, polished tone that resonates with professional audiences.
+    Use precise industry terminology and structured, logical presentation.`,
     
-    educational: `Create an educational newsletter that breaks down complex topics into easily digestible content.
-    Focus on clear explanations, practical examples, and key learning points.
-    Include relevant case studies or real-world applications where appropriate.`,
+    casual: `Create a conversational, approachable newsletter that feels like a friendly chat.
+    Focus on creating a warm, relatable tone that makes complex topics feel accessible.
+    Use everyday language, personal anecdotes, and a light-hearted writing style.
+    Engage readers through a conversational approach that feels natural and easy to read.
+    Incorporate humor and colloquial expressions where appropriate.`,
     
-    promotional: `Create a promotional newsletter that highlights key offerings while maintaining reader engagement.
-    Focus on value proposition and benefits while avoiding overly aggressive sales language.
-    Include clear calls-to-action and relevant social proof where appropriate.`,
+    inspirational: `Create an uplifting newsletter that motivates and empowers the reader.
+    Focus on storytelling that sparks emotion, hope, and personal growth.
+    Use powerful narratives, motivational quotes, and transformative insights.
+    Craft a tone that is encouraging, optimistic, and deeply meaningful.
+    Highlight success stories, personal journeys, and potential for positive change.`,
     
-    community: `Create a community-focused newsletter that fosters engagement and connection.
-    Focus on sharing community updates, highlights, and opportunities for involvement.
-    Include member spotlights, upcoming events, or collaborative opportunities where appropriate.`,
+    technical: `Create a detailed, in-depth newsletter for technically-minded readers.
+    Focus on providing comprehensive, precise technical information and analysis.
+    Use advanced technical terminology, detailed explanations, and in-depth research.
+    Include code snippets, technical diagrams, and rigorous methodological breakdowns.
+    Maintain a precise, analytical tone that prioritizes accuracy and depth of information.`,
     
-    update: `Create an update-style newsletter that effectively communicates recent developments or changes.
-    Focus on clarity, transparency, and relevant context for the updates.
-    Include timelines, impact assessments, and next steps where appropriate.`
+    trendingHashtags: `Create a trend-focused newsletter that captures the pulse of current industry conversations.
+    Focus on emerging trends, viral topics, and timely insights.
+    Incorporate trending hashtags and social media buzz to demonstrate real-time relevance.
+    Use a dynamic, energetic tone that reflects the fast-paced nature of trending content.`,
+    
+    characterLimitOptimization: `Create a concise, information-dense newsletter that maximizes impact within tight constraints.
+    Focus on delivering key insights through succinct, carefully crafted messaging.
+    Use strategic formatting, bullet points, and precise language to convey complex ideas efficiently.
+    Maintain a crisp, no-fluff tone that respects the reader's time and attention.`,
+    
+    threadedDiscussions: `Create a narrative-driven newsletter that tells a cohesive, multi-part story.
+    Focus on building a compelling narrative arc across different sections.
+    Use interconnected content that encourages readers to follow the entire thread.
+    Employ a storytelling approach that maintains suspense and reader engagement.`
   },
   threadPrompt: `
     You are an expert social media content creator specializing in generating engaging, interconnected thread posts.
