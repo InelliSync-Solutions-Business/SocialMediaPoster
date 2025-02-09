@@ -44,37 +44,173 @@ const PreferenceSelection: React.FC<PreferenceSelectionProps> = ({
   onNavigate,
   errors
 }) => {
-  const [preferences, setPreferences] = useState<UserPreferences>({
+  const initialPreferences: UserPreferences = {
     platforms: {
-      instagram: true,
-      linkedin: true,
-      twitter: true,
-      tiktok: true,
-      facebook: true,
-      discord: true
-    },
-    tone: 'professional',
-    platformFormats: {
       instagram: {
-        imageGeneration: true,
-        hashtagSuggestions: true
+        enabled: false,
+        features: {
+          imageGeneration: false,
+          hashtagSuggestions: false,
+          carouselPosts: false,
+          storyPosts: false,
+          reels: false,
+          liveStreaming: false,
+          shopping: false,
+          affiliateMarketing: false,
+          brandedContent: false,
+          productTags: false,
+          donationStickers: false,
+          professionalTone: false,
+          characterLimitOptimization: false,
+          threadedDiscussions: false,
+          segmentationTips: false,
+          templateCustomization: false
+        }
       },
       linkedin: {
-        professionalTone: true
+        enabled: false,
+        features: {
+          professionalTone: false,
+          imageGeneration: false,
+          hashtagSuggestions: false,
+          carouselPosts: false,
+          storyPosts: false,
+          reels: false,
+          liveStreaming: false,
+          shopping: false,
+          affiliateMarketing: false,
+          brandedContent: false,
+          productTags: false,
+          donationStickers: false,
+          threadedDiscussions: false,
+          segmentationTips: false,
+          templateCustomization: false,
+          characterLimitOptimization: false,
+         
+      
+  
+        }
       },
       twitter: {
-        characterLimitOptimization: true
+        enabled: false,
+        features: {
+          characterLimitOptimization: false,
+          imageGeneration: false,
+          hashtagSuggestions: false,
+          carouselPosts: false,
+          storyPosts: false,
+          reels: false,
+          liveStreaming: false,
+          shopping: false,
+          affiliateMarketing: false,
+          brandedContent: false,
+          productTags: false,
+          donationStickers: false,
+          professionalTone: false,
+          threadedDiscussions: false,
+          segmentationTips: false,
+          templateCustomization: false,
+          
+       
+          
+        }
       },
       tiktok: {
-        trendingHashtags: true
+        enabled: false,
+        features: {
+      
+          imageGeneration: false,
+          hashtagSuggestions: false,
+          carouselPosts: false,
+          storyPosts: false,
+          reels: false,
+          liveStreaming: false,
+          shopping: false,
+          affiliateMarketing: false,
+          brandedContent: false,
+          productTags: false,
+          donationStickers: false,
+          professionalTone: false,
+          characterLimitOptimization: false,
+          threadedDiscussions: false,
+          segmentationTips: false,
+          templateCustomization: false,
+     
+       
+        }
       },
       facebook: {
-        communityEngagement: true
+        enabled: false,
+        features: {
+      
+          imageGeneration: false,
+          hashtagSuggestions: false,
+          carouselPosts: false,
+          storyPosts: false,
+          reels: false,
+          liveStreaming: false,
+          shopping: false,
+          affiliateMarketing: false,
+          brandedContent: false,
+          productTags: false,
+          donationStickers: false,
+          professionalTone: false,
+          characterLimitOptimization: false,
+          threadedDiscussions: false,
+          segmentationTips: false,
+          templateCustomization: false,
+     
+     
+        }
       },
       discord: {
-        threadedDiscussions: true
+        enabled: false,
+        features: {
+          threadedDiscussions: false,
+      
+          imageGeneration: false,
+          hashtagSuggestions: false,
+          carouselPosts: false,
+          storyPosts: false,
+          reels: false,
+          liveStreaming: false,
+          shopping: false,
+          affiliateMarketing: false,
+          brandedContent: false,
+          productTags: false,
+          donationStickers: false,
+          professionalTone: false,
+          characterLimitOptimization: false,
+          segmentationTips: false,
+          templateCustomization: false,
+   
+
+        }
+      },
+      newsletter: {
+        enabled: false,
+        features: {
+          imageGeneration: false,
+          hashtagSuggestions: false,
+          carouselPosts: false,
+          storyPosts: false,
+          reels: false,
+          liveStreaming: false,
+          shopping: false,
+          affiliateMarketing: false,
+          brandedContent: false,
+          productTags: false,
+          donationStickers: false,
+          professionalTone: false,
+          characterLimitOptimization: false,
+          threadedDiscussions: false,
+          segmentationTips: false,
+          templateCustomization: false,
+       
+        }
       }
     },
+    tone: 'professional',
     contentTypes: {
       motivational: true,
       educational: true,
@@ -84,6 +220,175 @@ const PreferenceSelection: React.FC<PreferenceSelectionProps> = ({
     contentLength: 'medium',
     defaultWritingStyle: 'conversational',
     defaultAudience: 'tech',
+    platformFormats: {
+      instagram: {
+        imageGeneration: false,
+        hashtagSuggestions: false,
+        carouselPosts: false,
+        storyPosts: false,
+        reels: false,
+        liveStreaming: false,
+        shopping: false,
+        affiliateMarketing: false,
+        brandedContent: false,
+        productTags: false,
+        donationStickers: false,
+       
+   
+        professionalTone: false,
+        characterLimitOptimization: false,
+        trendingHashtags: false,
+        communityEngagement: false,
+        threadedDiscussions: false,
+        communityInteraction: false,
+      
+        segmentationTips: false,
+        templateCustomization: false
+      },
+      linkedin: {
+        imageGeneration: false,
+        hashtagSuggestions: false,
+        carouselPosts: false,
+        storyPosts: false,
+        reels: false,
+        liveStreaming: false,
+        shopping: false,
+        affiliateMarketing: false,
+        brandedContent: false,
+        productTags: false,
+        donationStickers: false,
+    
+
+        professionalTone: false,
+        characterLimitOptimization: false,
+        trendingHashtags: false,
+        communityEngagement: false,
+        threadedDiscussions: false,
+        communityInteraction: false,
+
+        segmentationTips: false,
+        templateCustomization: false
+      },
+      twitter: {
+        imageGeneration: false,
+        hashtagSuggestions: false,
+        carouselPosts: false,
+        storyPosts: false,
+        reels: false,
+        liveStreaming: false,
+        shopping: false,
+        affiliateMarketing: false,
+        brandedContent: false,
+        productTags: false,
+        donationStickers: false,
+
+
+        professionalTone: false,
+        characterLimitOptimization: false,
+        trendingHashtags: false,
+        communityEngagement: false,
+        threadedDiscussions: false,
+        communityInteraction: false,
+
+        segmentationTips: false,
+        templateCustomization: false
+      },
+      tiktok: {
+        imageGeneration: false,
+        hashtagSuggestions: false,
+        carouselPosts: false,
+        storyPosts: false,
+        reels: false,
+        liveStreaming: false,
+        shopping: false,
+        affiliateMarketing: false,
+        brandedContent: false,
+        productTags: false,
+        donationStickers: false,
+
+       professionalTone: false,
+        characterLimitOptimization: false,
+        trendingHashtags: false,
+        communityEngagement: false,
+        threadedDiscussions: false,
+        communityInteraction: false,
+
+        segmentationTips: false,
+        templateCustomization: false
+      },
+      facebook: {
+        imageGeneration: false,
+        hashtagSuggestions: false,
+        carouselPosts: false,
+        storyPosts: false,
+        reels: false,
+        liveStreaming: false,
+        shopping: false,
+        affiliateMarketing: false,
+        brandedContent: false,
+        productTags: false,
+        donationStickers: false,
+ 
+
+        professionalTone: false,
+        characterLimitOptimization: false,
+        trendingHashtags: false,
+        communityEngagement: false,
+        threadedDiscussions: false,
+        communityInteraction: false,
+
+        segmentationTips: false,
+        templateCustomization: false
+      },
+      discord: {
+        imageGeneration: false,
+        hashtagSuggestions: false,
+        carouselPosts: false,
+        storyPosts: false,
+        reels: false,
+        liveStreaming: false,
+        shopping: false,
+        affiliateMarketing: false,
+        brandedContent: false,
+        productTags: false,
+        donationStickers: false,
+ 
+   
+        professionalTone: false,
+        characterLimitOptimization: false,
+        trendingHashtags: false,
+        communityEngagement: false,
+        threadedDiscussions: false,
+        communityInteraction: false,
+
+        segmentationTips: false,
+        templateCustomization: false
+      },
+      newsletter: {
+        imageGeneration: false,
+        hashtagSuggestions: false,
+        carouselPosts: false,
+        storyPosts: false,
+        reels: false,
+        liveStreaming: false,
+        shopping: false,
+        affiliateMarketing: false,
+        brandedContent: false,
+        productTags: false,
+        donationStickers: false,
+ 
+
+        professionalTone: false,
+        characterLimitOptimization: false,
+        trendingHashtags: false,
+        communityEngagement: false,
+        threadedDiscussions: false,
+        communityInteraction: false,
+
+        segmentationTips: false,
+        templateCustomization: false
+      }
+    },
     defaultGuidelines: [
       'Maintain brand voice consistency',
       'Include relevant industry keywords',
@@ -91,7 +396,9 @@ const PreferenceSelection: React.FC<PreferenceSelectionProps> = ({
       'Use inclusive language',
       'Follow SEO best practices'
     ]
-  });
+  };
+
+  const [preferences, setPreferences] = useState(initialPreferences);
 
   const handleSave = () => {
     onSave(preferences);
@@ -119,11 +426,17 @@ const PreferenceSelection: React.FC<PreferenceSelectionProps> = ({
               <div className="grid grid-cols-2 gap-4">
                 <div className="flex items-center space-x-2">
                   <Switch
-                    checked={preferences.platforms.instagram}
+                    checked={preferences.platforms.instagram.enabled}
                     onCheckedChange={(checked) =>
                       setPreferences({
                         ...preferences,
-                        platforms: { ...preferences.platforms, instagram: checked }
+                        platforms: { 
+                          ...preferences.platforms, 
+                          instagram: { 
+                            ...preferences.platforms.instagram, 
+                            enabled: checked 
+                          } 
+                        }
                       })
                     }
                   />
@@ -135,11 +448,17 @@ const PreferenceSelection: React.FC<PreferenceSelectionProps> = ({
 
                 <div className="flex items-center space-x-2">
                   <Switch
-                    checked={preferences.platforms.linkedin}
+                    checked={preferences.platforms.linkedin.enabled}
                     onCheckedChange={(checked) =>
                       setPreferences({
                         ...preferences,
-                        platforms: { ...preferences.platforms, linkedin: checked }
+                        platforms: { 
+                          ...preferences.platforms, 
+                          linkedin: { 
+                            ...preferences.platforms.linkedin, 
+                            enabled: checked 
+                          } 
+                        }
                       })
                     }
                   />
@@ -151,11 +470,17 @@ const PreferenceSelection: React.FC<PreferenceSelectionProps> = ({
 
                 <div className="flex items-center space-x-2">
                   <Switch
-                    checked={preferences.platforms.twitter}
+                    checked={preferences.platforms.twitter.enabled}
                     onCheckedChange={(checked) =>
                       setPreferences({
                         ...preferences,
-                        platforms: { ...preferences.platforms, twitter: checked }
+                        platforms: { 
+                          ...preferences.platforms, 
+                          twitter: { 
+                            ...preferences.platforms.twitter, 
+                            enabled: checked 
+                          } 
+                        }
                       })
                     }
                   />
@@ -167,11 +492,17 @@ const PreferenceSelection: React.FC<PreferenceSelectionProps> = ({
 
                 <div className="flex items-center space-x-2">
                   <Switch
-                    checked={preferences.platforms.facebook}
+                    checked={preferences.platforms.facebook.enabled}
                     onCheckedChange={(checked) =>
                       setPreferences({
                         ...preferences,
-                        platforms: { ...preferences.platforms, facebook: checked }
+                        platforms: { 
+                          ...preferences.platforms, 
+                          facebook: { 
+                            ...preferences.platforms.facebook, 
+                            enabled: checked 
+                          } 
+                        }
                       })
                     }
                   />
@@ -183,11 +514,17 @@ const PreferenceSelection: React.FC<PreferenceSelectionProps> = ({
 
                 <div className="flex items-center space-x-2">
                   <Switch
-                    checked={preferences.platforms.discord}
+                    checked={preferences.platforms.discord.enabled}
                     onCheckedChange={(checked) =>
                       setPreferences({
                         ...preferences,
-                        platforms: { ...preferences.platforms, discord: checked }
+                        platforms: { 
+                          ...preferences.platforms, 
+                          discord: { 
+                            ...preferences.platforms.discord, 
+                            enabled: checked 
+                          } 
+                        }
                       })
                     }
                   />
