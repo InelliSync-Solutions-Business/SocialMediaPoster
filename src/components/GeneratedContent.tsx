@@ -306,7 +306,7 @@ export const GeneratedContent: React.FC<GeneratedContentProps> = ({
   const handleShare = async (platform: PlatformKey) => {
     // Check if platform is enabled in preferences
     if (platform === 'newsletter') {
-      if (preferences?.platformFormats?.newsletter && !preferences.platformFormats.newsletter.emailOptimization) {
+      if (preferences?.platformFormats?.newsletter && !preferences.platformFormats.newsletter.templateCustomization) {
         console.warn(`Newsletter is disabled in preferences`);
         return;
       }
