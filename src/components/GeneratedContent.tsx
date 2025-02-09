@@ -11,7 +11,8 @@ import {
   Trash2,
   Loader2,
   Send,
-  Info
+  Info,
+  MailIcon
 } from 'lucide-react';
 import { countTokens, getPlatformTokenLimit } from '../utils/tokenUtils';
 import AILoader from './AILoader';
@@ -34,7 +35,7 @@ interface GeneratedContentProps {
   templateAdditionalGuidelines?: string;
 }
 
-type PlatformKey = 'instagram' | 'linkedin' | 'twitter' | 'tiktok' | 'facebook' | 'discord';
+type PlatformKey = 'instagram' | 'linkedin' | 'twitter' | 'tiktok' | 'facebook' | 'discord' | 'newsletter';
 
 export interface ThreadPost {
   id: string;
@@ -304,9 +305,16 @@ export const GeneratedContent: React.FC<GeneratedContentProps> = ({
 
   const handleShare = async (platform: PlatformKey) => {
     // Check if platform is enabled in preferences
-    if (preferences?.platforms && !preferences.platforms[platform]) {
-      console.warn(`Platform ${platform} is disabled in preferences`);
-      return;
+    if (platform === 'newsletter') {
+      if (preferences?.platformFormats?.newsletter && !preferences.platformFormats.newsletter.emailOptimization) {
+        console.warn(`Newsletter is disabled in preferences`);
+        return;
+      }
+    } else {
+      if (preferences?.platforms && !preferences.platforms[platform]) {
+        console.warn(`Platform ${platform} is disabled in preferences`);
+        return;
+      }
     }
 
     setSelectedPlatform(platform);
@@ -339,6 +347,9 @@ export const GeneratedContent: React.FC<GeneratedContentProps> = ({
         break;
       case 'tiktok':
         shareUrl = `https://www.tiktok.com/create/react?text=${shareText}`;
+        break;
+      case 'newsletter':
+        shareUrl = `mailto:?subject=Newsletter&body=${shareText}`;
         break;
       default:
         console.warn(`Unsupported sharing platform: ${platform}`);
@@ -650,6 +661,19 @@ export const GeneratedContent: React.FC<GeneratedContentProps> = ({
           
         
           
+          <TooltipWrapper title="Share on Newsletter" disabled={isLoading}>
+            <button 
+              onClick={() => handleShare('newsletter')}
+              className={`
+                p-2 rounded-full 
+                ${selectedPlatform === 'newsletter' ? 'bg-[#4a90e2] text-white' : 'hover:bg-secondary/50 dark:hover:bg-secondary/20'}
+                transition-colors duration-300
+              `}
+            >
+              <MailIcon size={20} />
+            </button>
+          </TooltipWrapper>
+
           <TooltipWrapper title="Copy Content" disabled={isLoading}>
             <button 
               onClick={copyToClipboard}

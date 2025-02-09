@@ -1,23 +1,13 @@
+import { PlatformSpecificFormat } from './platformFormats';
+
 export interface PlatformFormats {
-  instagram: {
-    imageGeneration: boolean;
-    hashtagSuggestions: boolean;
-  };
-  linkedin: {
-    professionalTone: boolean;
-  };
-  twitter: {
-    characterLimitOptimization: boolean;
-  };
-  tiktok: {
-    trendingHashtags: boolean;
-  };
-  facebook: {
-    communityEngagement: boolean;
-  };
-  discord: {
-    threadedDiscussions: boolean;
-  };
+  instagram: PlatformSpecificFormat;
+  linkedin: PlatformSpecificFormat;
+  twitter: PlatformSpecificFormat;
+  tiktok: PlatformSpecificFormat;
+  facebook: PlatformSpecificFormat;
+  discord: PlatformSpecificFormat;
+  newsletter: PlatformSpecificFormat;
 }
 
 export interface UserPreferences {

@@ -9,7 +9,11 @@ export const NewsletterPage: React.FC = () => {
     isLoading,
     error,
     handleSubmit,
-    generatedContent
+    generatedContent,
+    regenerateNewsletter,
+    clearNewsletter,
+    updateContent,
+    streamingState
   } = useNewsletter();
 
   return (
@@ -35,6 +39,10 @@ export const NewsletterPage: React.FC = () => {
             newsletter={newsletter}
             generatedContent={generatedContent}
             isLoading={isLoading}
+            onRegenerate={regenerateNewsletter}
+            onClear={clearNewsletter}
+            onUpdateContent={updateContent}
+            streamingState={streamingState}
           />
         </div>
       </div>

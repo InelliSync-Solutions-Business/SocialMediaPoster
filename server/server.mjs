@@ -24,6 +24,8 @@ app.use((req, res, next) => {
   next();
 });
 
+import { buildNewsletterPrompt as newsletterPostBuildPrompt } from '../functions/newsletterPost.js';
+
 // Helper function to build Threaded Post prompt
 function buildPrompt({ postType, topic, audience, style, guidelines }) {
   if (postType === 'thread') {
@@ -71,6 +73,12 @@ function parseThreadContent(content) {
     content: tweet,
     characterCount: tweet.length
   }));
+}
+
+// Helper function to build newsletter prompt
+function buildNewsletterPrompt(params) {
+  // Delegate to the more comprehensive prompt builder from newsletterPost.js
+  return newsletterPostBuildPrompt(params);
 }
 
 // Generate post endpoint
@@ -303,31 +311,31 @@ app.post('/api/generate-poll', async (req, res) => {
   }
 });
 
-// Newsletter generation endpoint
-app.post('/api/generate-newsletter', async (req, res) => {
+// Generate newsletter endpoint with Server-Sent Events
+app.get('/api/generate-newsletter', async (req, res) => {
   try {
-    const { 
-      topic, 
-      length, 
-      writingStyle, 
-      targetAudience, 
-      type, 
-      tone, 
-      additionalGuidelines 
-    } = req.body;
-
-    console.log('Received newsletter generation request:', { 
-      topic, 
-      length, 
-      writingStyle, 
-      targetAudience, 
-      type, 
-      tone, 
-      additionalGuidelines 
+    console.log('Full request details:', {
+      method: req.method,
+      url: req.url,
+      headers: req.headers,
+      query: req.query
     });
+
+    const { topic, audience, style, guidelines } = req.query;
+    console.log('Received newsletter generation request:', { topic, audience, style, guidelines });
+
+    // Input validation
+    if (!topic || !audience) {
+      console.error('Validation error: Missing topic or audience');
+      return res.status(400).json({
+        success: false,
+        error: 'Topic and audience are required'
+      });
+    }
 
     // Validate OpenAI configuration
     if (!process.env.OPENAI_API_KEY) {
+      console.error('OpenAI API key is not configured');
       return res.status(500).json({
         success: false,
         error: 'OpenAI API key is not configured'
@@ -337,71 +345,61 @@ app.post('/api/generate-newsletter', async (req, res) => {
     const openai = new OpenAI({
       apiKey: process.env.OPENAI_API_KEY
     });
-    console.log('OpenAI client initialized');
 
-    const newsletterPrompt = `Generate a ${length || 'medium'} length newsletter about ${topic}.
-The newsletter should be structured with the following parts, each separated by triple hyphens (---):
+    // Set headers for Server-Sent Events
+    res.writeHead(200, {
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-cache',
+      'Connection': 'keep-open',
+      'Access-Control-Allow-Origin': '*'  // Add explicit CORS header
+    });
 
-1. Title: A compelling title for the newsletter
-2. Introduction: A brief introduction to the topic
-3. Main Sections: 2-4 sections, each with a subheading and content
-4. Conclusion: A brief concluding paragraph
-5. Call to Action: A clear next step for readers
+    const prompt = buildNewsletterPrompt({ 
+      topic: topic.toString(), 
+      audience: audience.toString(), 
+      style: style?.toString() || 'Informative', 
+      guidelines: guidelines?.toString() || '' 
+    });
 
-Writing Style: ${writingStyle}
-Target Audience: ${targetAudience}
-Newsletter Type: ${type}
-Tone: ${tone || 'professional'}
-${additionalGuidelines ? `Additional Guidelines: ${additionalGuidelines}` : ''}
+    console.log('Generated prompt:', prompt);
 
-Format your response exactly like this example:
-Title: Example Newsletter Title
----
-Introduction: This is the introduction paragraph...
----
-Section: First Section Title
-Content: This is the content of the first section...
----
-Section: Second Section Title
-Content: This is the content of the second section...
----
-Conclusion: This is the conclusion paragraph...
----
-Call to Action: Here's what you should do next...`;
-
-    const completion = await openai.chat.completions.create({
+    const stream = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
-        { role: 'system', content: newsletterPrompt }
+        {
+          role: 'system',
+          content: `You are an AI newsletter generation assistant for Intellisync Solutions. Create engaging, informative newsletters tailored to specific audiences.`
+        },
+        {
+          role: 'user',
+          content: prompt
+        }
       ],
-      temperature: 0.8,
-      max_tokens: 4000,
-      presence_penalty: 0.2,
-      frequency_penalty: 0.3
+      stream: true
     });
-    console.log('OpenAI newsletter response received');
 
-    console.log('OpenAI response:', completion.choices[0].message);
-    const content = completion.choices[0].message.content;
-    console.log('Raw content:', content);
+    let fullContent = '';
+    for await (const chunk of stream) {
+      const content = chunk.choices[0]?.delta?.content || '';
+      fullContent += content;
 
-    res.status(200).json({
-      content,
-      metadata: {
-        topic,
-        length,
-        writingStyle,
-        targetAudience,
-        type,
-        tone
-      }
-    });
+      // Send content chunks as SSE
+      res.write(`data: ${JSON.stringify({ content })}\n\n`);
+    }
+
+    // Send final message
+    res.write(`data: ${JSON.stringify({ done: true })}\n\n`);
+    res.end();
+
   } catch (error) {
-    console.error('Error generating newsletter:', error);
-    res.status(500).json({ 
-      success: false,
-      error: error.message 
+    console.error('Newsletter generation error:', error);
+    console.error('Error details:', {
+      name: error.name,
+      message: error.message,
+      stack: error.stack
     });
+    res.status(500).write(`data: ${JSON.stringify({ error: true, message: error.message })}\n\n`);
+    res.end();
   }
 });
 

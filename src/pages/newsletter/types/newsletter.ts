@@ -14,6 +14,8 @@ export interface Newsletter {
 
 export interface NewsletterFormData extends Newsletter {
   customSections?: string[];
+  theme?: string;
+  keyPoints: string[];
 }
 
 export interface GeneratedNewsletter {

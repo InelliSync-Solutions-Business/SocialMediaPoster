@@ -15,6 +15,7 @@ import TemplatesPage from './pages/TemplatesPage';
 import AILoader from './components/AILoader';
 import PreferenceSelection from './components/PreferenceSelection';
 import { UserPreferences } from './types/preferences';
+import { PlatformFormats } from './types/platformFormats';
 import NewsletterPage from './pages/newsletter/NewsletterPage';
 import Polls from './components/Polls';
 
@@ -74,29 +75,187 @@ function App() {
       twitter: true,
       tiktok: true,
       facebook: true,
-      discord: true
+      discord: true,
+      newsletter: true
+    } as {
+      instagram: boolean;
+      linkedin: boolean;
+      twitter: boolean;
+      tiktok: boolean;
+      facebook: boolean;
+      discord: boolean;
+      newsletter: boolean;
     },
     tone: 'professional',
     contentLength: 'medium',
     platformFormats: {
-      instagram: {
-        imageGeneration: true,
-        hashtagSuggestions: true
+      instagram: { 
+        imageGeneration: false,
+        hashtagSuggestions: false,
+        carouselPosts: false,
+        storyPosts: false,
+        reels: false,
+        igTV: false,
+        liveStreaming: false,
+        shopping: false,
+        affiliateMarketing: false,
+        brandedContent: false,
+        productTags: false,
+        donationStickers: false,
+        questionStickers: false,
+        professionalTone: false,
+        characterLimitOptimization: false,
+        trendingHashtags: false,
+        communityEngagement: false,
+        threadedDiscussions: false,
+        communityInteraction: false,
+        emailOptimization: false,
+        segmentationTips: false,
+        templateCustomization: false
       },
-      linkedin: {
-        professionalTone: true
+      linkedin: { 
+        imageGeneration: false,
+        hashtagSuggestions: false,
+        carouselPosts: false,
+        storyPosts: false,
+        reels: false,
+        igTV: false,
+        liveStreaming: false,
+        shopping: false,
+        affiliateMarketing: false,
+        brandedContent: false,
+        productTags: false,
+        donationStickers: false,
+        questionStickers: false,
+        professionalTone: false,
+        characterLimitOptimization: false,
+        trendingHashtags: false,
+        communityEngagement: false,
+        threadedDiscussions: false,
+        communityInteraction: false,
+        emailOptimization: false,
+        segmentationTips: false,
+        templateCustomization: false
       },
-      twitter: {
-        characterLimitOptimization: true
+      twitter: { 
+        imageGeneration: false,
+        hashtagSuggestions: false,
+        carouselPosts: false,
+        storyPosts: false,
+        reels: false,
+        igTV: false,
+        liveStreaming: false,
+        shopping: false,
+        affiliateMarketing: false,
+        brandedContent: false,
+        productTags: false,
+        donationStickers: false,
+        questionStickers: false,
+        professionalTone: false,
+        characterLimitOptimization: false,
+        trendingHashtags: false,
+        communityEngagement: false,
+        threadedDiscussions: false,
+        communityInteraction: false,
+        emailOptimization: false,
+        segmentationTips: false,
+        templateCustomization: false
       },
-      tiktok: {
-        trendingHashtags: true
+      tiktok: { 
+        imageGeneration: false,
+        hashtagSuggestions: false,
+        carouselPosts: false,
+        storyPosts: false,
+        reels: false,
+        igTV: false,
+        liveStreaming: false,
+        shopping: false,
+        affiliateMarketing: false,
+        brandedContent: false,
+        productTags: false,
+        donationStickers: false,
+        questionStickers: false,
+        professionalTone: false,
+        characterLimitOptimization: false,
+        trendingHashtags: false,
+        communityEngagement: false,
+        threadedDiscussions: false,
+        communityInteraction: false,
+        emailOptimization: false,
+        segmentationTips: false,
+        templateCustomization: false
       },
-      facebook: {
-        communityEngagement: true
+      facebook: { 
+        imageGeneration: false,
+        hashtagSuggestions: false,
+        carouselPosts: false,
+        storyPosts: false,
+        reels: false,
+        igTV: false,
+        liveStreaming: false,
+        shopping: false,
+        affiliateMarketing: false,
+        brandedContent: false,
+        productTags: false,
+        donationStickers: false,
+        questionStickers: false,
+        professionalTone: false,
+        characterLimitOptimization: false,
+        trendingHashtags: false,
+        communityEngagement: false,
+        threadedDiscussions: false,
+        communityInteraction: false,
+        emailOptimization: false,
+        segmentationTips: false,
+        templateCustomization: false
       },
-      discord: {
-        threadedDiscussions: true
+      discord: { 
+        imageGeneration: false,
+        hashtagSuggestions: false,
+        carouselPosts: false,
+        storyPosts: false,
+        reels: false,
+        igTV: false,
+        liveStreaming: false,
+        shopping: false,
+        affiliateMarketing: false,
+        brandedContent: false,
+        productTags: false,
+        donationStickers: false,
+        questionStickers: false,
+        professionalTone: false,
+        characterLimitOptimization: false,
+        trendingHashtags: false,
+        communityEngagement: false,
+        threadedDiscussions: false,
+        communityInteraction: false,
+        emailOptimization: false,
+        segmentationTips: false,
+        templateCustomization: false
+      },
+      newsletter: { 
+        imageGeneration: false,
+        hashtagSuggestions: false,
+        carouselPosts: false,
+        storyPosts: false,
+        reels: false,
+        igTV: false,
+        liveStreaming: false,
+        shopping: false,
+        affiliateMarketing: false,
+        brandedContent: false,
+        productTags: false,
+        donationStickers: false,
+        questionStickers: false,
+        professionalTone: false,
+        characterLimitOptimization: false,
+        trendingHashtags: false,
+        communityEngagement: false,
+        threadedDiscussions: false,
+        communityInteraction: false,
+        emailOptimization: false,
+        segmentationTips: false,
+        templateCustomization: false
       }
     },
     contentTypes: {
@@ -339,7 +498,10 @@ function App() {
               <Route path="/" element={<LandingPage />} />
               <Route path="/pricing" element={<PricingPage />} />
               <Route path="/newsletter" element={<NewsletterPage />} />
-              <Route path="/templates" element={<TemplatesPage />} />
+              <Route path="/templates" element={<TemplatesPage 
+                onTemplateSelect={handleTemplateSelect}
+                onNavigateToGenerator={() => navigate('/generator')}
+              />} />
               <Route path="/generator" element={
                 <div className="max-w-4xl mx-auto p-4">
                   <Card className="p-6">
