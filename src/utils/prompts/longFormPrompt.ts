@@ -33,77 +33,47 @@ export const generateLongFormPrompt = (
 ) => {
   const lengthGuide = LENGTH_GUIDELINES[params.length || 'medium'];
 
-  return `CONTENT TYPE: Long-Form Tech Article
+  return `
+CONTENT NARRATIVE: Thought Leadership Article
 
-CORE OBJECTIVE:
-Create an authoritative, in-depth piece that establishes thought leadership while providing actionable insights for the target audience.
+CRITICAL WRITING DIRECTIVE:
+Compose all content as if engaged in a thoughtful, one-on-one conversation with the reader. Maintain a fluid, first-person storytelling approach that draws from personal or observed experiences, weaving in insights naturally. Under no circumstances should you use bullet points, numbered lists, or rigid structural markers.
 
-CONTENT PARAMETERS:
-Topic: ${params.topic}
-Target Audience: ${params.audience}
-Writing Style: ${params.style}
-${params.tone ? `Tone: ${params.tone}` : ''}
-${params.guidelines ? `Additional Guidelines: ${params.guidelines}` : ''}
+NARRATIVE COMPOSITION PRINCIPLES:
+Speak in a personal, reflective voice that shares anecdotes and observations in a conversational, almost confessional manner. Keep paragraphs flowing so that each idea glides into the next without abrupt transitions or section breaks. Let rhetorical questions and evocative language create momentum, enticing the reader to continue.
 
-STRUCTURAL REQUIREMENTS:
-- Target Length: ${lengthGuide.wordCount}
-- Section Structure: ${lengthGuide.sections}
-- Depth Level: ${lengthGuide.depth}
+STORYTELLING MANDATE:
+Your narrative should feel organic, free of academic stiffness, and emotionally resonant. Build trust and engagement through meaningful examples or recollections that highlight your topic’s relevance. Focus on the human element—how individuals experience, learn, and evolve within the subject matter at hand.
 
-CONTENT FRAMEWORK:
-1. Introduction
-   - Compelling hook that establishes relevance
-   - Clear value proposition for the reader
-   - Overview of key points to be covered
+FORBIDDEN FORMATTING:
+Absolutely no bullet points.
+No numbered lists.
+No headings or subheadings that segment the text.
+No outlines or other rigid text structures.
 
-2. Core Content Structure
-   - Logical progression of ideas
-   - Clear section headers and subheaders
-   - Strategic use of bullet points and lists
-   - Integration of relevant statistics and data
-   - Real-world examples and case studies
+NARRATIVE FLOW TECHNIQUES:
+Share concepts as if recounting a personal journey or discussing something you’ve witnessed firsthand. Transition smoothly from one idea to another by drawing logical connections or posing gentle, open-ended questions. Use figurative or metaphorical language only when it enhances understanding. Write in first person to maintain the sense of an intimate exchange.
 
-3. Technical Depth
-   - Balance technical accuracy with accessibility
-   - Define complex terms when introduced
-   - Use analogies to explain complex concepts
-   - Include practical applications
+CONTEXTUAL FRAMEWORK:
+Topic: \${params.topic}
+Audience Landscape: \${params.audience}
+Narrative Approach: \${params.style}
+\${params.tone ? \`Narrative Tone: \${params.tone}\` : ''}
+\${params.guidelines ? \`Narrative Nuances: \${params.guidelines}\` : ''}
 
-4. Engagement Elements
-   - Incorporate relevant visuals/diagrams
-   - Use callout boxes for key insights
-   - Include expert quotes or perspectives
-   - Add interactive elements where appropriate
+NARRATIVE DEPTH DIMENSIONS:
+Exploration Range: \${lengthGuide.wordCount}
+Conceptual Layers: \${lengthGuide.depth}
 
-5. SEO Optimization
-   - Strategic keyword placement
-   - Optimized meta description
-   - Clear heading hierarchy
-   - Internal and external linking
+WRITING VOICE REQUIREMENTS:
+Blend a sense of authority with warmth and personal insight. Avoid sterile, purely informational language. Let genuine curiosity, empathy, or wonder guide the narrative, prompting the reader to think more deeply about the subject. Keep the style reminiscent of the example, which flows like an introspective reflection that invites the reader to share in the journey.
 
-WRITING GUIDELINES:
-1. Tech Leadership
-   - Demonstrate deep domain expertise
-   - Connect to broader industry trends
-   - Provide forward-looking insights
-   - Include expert analysis
+CONTENT GENERATION PHILOSOPHY:
+Every piece should feel like a personal exploration that reveals new perspectives and insights through storytelling. Prioritize the human element—how people connect with, learn from, and are shaped by these ideas. Maintain a conversational tone and treat the reader as a trusted confidant who’s eager to hear more.
 
-2. Accessibility
-   - Clear, concise explanations
-   - Progressive disclosure of complex topics
-   - Relevant examples and use cases
-   - Actionable takeaways
+OUTCOME EXPECTATIONS:
+A smoothly unfolding, compelling narrative that feels like a genuine conversation. Insights should emerge organically through personal anecdotes, reflections, or imagined scenarios, never through lists or rigid breakdowns. The final piece must feel written from the heart, with the mind only guiding the conversation, not dominating it.
 
-3. Engagement
-   - Conversational yet authoritative tone
-   - Regular engagement hooks
-   - Discussion prompts
-   - Clear calls-to-action
-
-OUTPUT REQUIREMENTS:
-1. Complete article with proper formatting
-2. Suggested title and meta description
-3. Key takeaways summary
-4. Recommended internal/external links
-5. Image/visual suggestions`;
-}
+FINAL CRITICAL INSTRUCTION:
+If you ever feel the urge to add bullet points or numbered lists, pause and reformulate the idea as part of a free-flowing paragraph. Strive for a narrative that mirrors thoughtful, one-on-one dialogue rather than a structured presentation.
+`};

@@ -10,7 +10,8 @@ const CONTENT_PROMPTS_MAP = {
   poll: CONTENT_PROMPTS.pollsPrompt,
   longForm: CONTENT_PROMPTS.longFormPrompt,
   shortForm: CONTENT_PROMPTS.shortFormPrompt,
-  newsletter: buildNewsletterPrompt
+  newsletter: buildNewsletterPrompt,
+  thread: CONTENT_PROMPTS.threadPrompt
 };
 
 // Shared tone configurations
@@ -95,6 +96,71 @@ function buildPrompt(postType, params) {
   return { prompt, temperature: toneConfig.temperature };
 }
 
+// Add thread post validation and trimming function
+function validateAndTrimThreadPosts(threadPosts, minChars = 140, maxChars = 240) {
+  return threadPosts
+    .map(post => post.trim())
+    .filter(post => 
+      post.length >= minChars && 
+      post.length <= maxChars
+    )
+    .slice(0, 6);
+}
+
+// Modify thread generation function
+async function generateThreadPosts(openai, params, maxThreads = 6) {
+  const threadPrompt = `
+    Generate a series of interconnected social media thread posts about the topic: ${params.topic}
+    
+    Strict Guidelines:
+    - Create ${maxThreads} thread posts that tell a cohesive story
+    - Each thread MUST be between 140-240 characters
+    - Each post should build upon the previous one
+    - Maintain the ${params.tone} tone
+    - Use engaging and informative language
+    - Include relevant hashtags 
+    - Focus on creating a narrative flow
+    - Ensure clarity and impact within the character limit
+
+    Additional Context: ${params.userInput || ''}
+  `;
+
+  const threadCompletion = await openai.chat.completions.create({
+    model: "gpt-4o-mini",
+    messages: [
+      { role: 'system', content: threadPrompt }
+    ],
+    temperature: TONE_CONFIGS[params.tone]?.temperature || 0.7,
+    max_tokens: 1500,
+    n: 1
+  });
+
+  const threadContent = threadCompletion.choices[0].message.content;
+  
+  // Split thread content into individual posts and validate
+  const rawThreadPosts = threadContent.split('\n').filter(post => post.trim() !== '');
+  const validatedThreadPosts = validateAndTrimThreadPosts(rawThreadPosts);
+
+  // If not enough valid posts, regenerate
+  if (validatedThreadPosts.length < maxThreads) {
+    const retryCompletion = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        { role: 'system', content: threadPrompt + '\n\nPrevious attempt was insufficient. Be more concise and precise.' }
+      ],
+      temperature: 0.8,
+      max_tokens: 1500,
+      n: 1
+    });
+
+    const retryThreadContent = retryCompletion.choices[0].message.content;
+    const retryRawThreadPosts = retryThreadContent.split('\n').filter(post => post.trim() !== '');
+    return validateAndTrimThreadPosts(retryRawThreadPosts);
+  }
+
+  return validatedThreadPosts;
+}
+
 export const handler = async (event, context) => {
   if (event.httpMethod !== 'POST') {
     return { 
@@ -134,31 +200,41 @@ export const handler = async (event, context) => {
     });
     console.log('OpenAI client initialized');
 
-    const { prompt, temperature } = buildPrompt(postType, {
-      topic,
-      targetAudience,
-      writingStyle,
-      additionalGuidelines,
-      tone,
-      length,
-      userInput,
-      newsletterType
-    });
+    let content;
+    if (postType === 'thread') {
+      content = await generateThreadPosts(openai, {
+        topic,
+        targetAudience,
+        tone,
+        userInput
+      });
+    } else {
+      const { prompt, temperature } = buildPrompt(postType, {
+        topic,
+        targetAudience,
+        writingStyle,
+        additionalGuidelines,
+        tone,
+        length,
+        userInput,
+        newsletterType
+      });
 
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [
-        { role: 'system', content: prompt }
-      ],
-      temperature,
-      max_tokens: postType === 'long' ? 1000 
-        : postType === 'thread' ? 800 
-        : postType === 'newsletter' ? 3000 
-        : 400,
-      presence_penalty: 0,
-      frequency_penalty: 0
-    });
-    console.log('OpenAI response received');
+      const completion = await openai.chat.completions.create({
+        model: "gpt-4o-mini",
+        messages: [
+          { role: 'system', content: prompt }
+        ],
+        temperature,
+        max_tokens: postType === 'long' ? 1000 
+          : postType === 'thread' ? 800 
+          : postType === 'newsletter' ? 3000 
+          : 400,
+        presence_penalty: 0,
+        frequency_penalty: 0
+      });
+      content = completion.choices[0].message.content;
+    }
 
     return {
       statusCode: 200,
@@ -168,7 +244,7 @@ export const handler = async (event, context) => {
       },
       body: JSON.stringify({
         success: true,
-        content: completion.choices[0].message.content
+        content: content
       })
     };
   } catch (error) {
