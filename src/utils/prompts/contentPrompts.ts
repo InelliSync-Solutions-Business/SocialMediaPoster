@@ -1,6 +1,22 @@
 // Content prompts for different types of content generation
 
-const CONTENT_PROMPTS = {
+interface NewsletterPrompts {
+  professional: string;
+  casual: string;
+  inspirational: string;
+  technical: string;
+  trendingHashtags: string;
+  characterLimitOptimization: string;
+  threadedDiscussions: string;
+}
+
+interface ContentPrompts {
+  newsletter: NewsletterPrompts;
+  threadPrompt: string;
+  newsletterPrompt?: string;
+}
+
+const CONTENT_PROMPTS: ContentPrompts = {
   newsletter: {
     professional: `Create a professional newsletter that demonstrates expertise and credibility.
     Focus on delivering high-quality, authoritative content with clear, concise language.

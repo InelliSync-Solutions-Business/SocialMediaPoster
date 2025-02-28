@@ -2,6 +2,13 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { OpenAI } from 'openai';
+import { 
+  buildStandardPostPrompt, 
+  buildThreadPrompt, 
+  buildPollPrompt, 
+  parseThreadContent,
+  buildNewsletterPrompt
+} from '../src/utils/prompts/promptManager.ts';
 
 dotenv.config();
 
@@ -24,62 +31,10 @@ app.use((req, res, next) => {
   next();
 });
 
-import { buildNewsletterPrompt as newsletterPostBuildPrompt } from '../functions/newsletterPost.js';
-
-// Helper function to build Threaded Post prompt
-function buildPrompt({ postType, topic, audience, style, guidelines }) {
-  if (postType === 'thread') {
-    return `
-Generate a Twitter thread (4-6 tweets) about the following topic. Each tweet should be separated by "---" and be under 280 characters.
-
-Topic: ${topic}
-Target Audience: ${audience}
-Writing Style: ${style}
-Additional Guidelines: ${guidelines}
-
-Requirements:
-1. Start with a hook tweet that grabs attention
-2. Each tweet should flow naturally to the next
-3. Include relevant emojis where appropriate
-4. End with a call-to-action
-5. Keep each tweet under 280 characters
-6. Separate tweets with "---"
-
-Example Format:
-🧵 First tweet here...
----
-Second tweet continues the story...
----
-Final tweet with call-to-action 🎯
-
-Please generate the thread now:`;
-  }
-  
-  return `
-Generate a social media post.
-Post Type: ${postType}
-Topic: ${topic}
-Target Audience: ${audience}
-Style: ${style}
-Guidelines: ${guidelines}
-`;
-}
-
-// Helper function to parse thread content
-function parseThreadContent(content) {
-  if (!content) return [];
-  const tweets = content.split('---').map(tweet => tweet.trim());
-  return tweets.filter(tweet => tweet.length > 0).map(tweet => ({
-    content: tweet,
-    characterCount: tweet.length
-  }));
-}
-
-// Helper function to build newsletter prompt
-function buildNewsletterPrompt(params) {
-  // Delegate to the more comprehensive prompt builder from newsletterPost.js
-  return newsletterPostBuildPrompt(params);
-}
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok', message: 'Server is running' });
+});
 
 // Generate post endpoint
 app.post('/api/generatePost', async (req, res) => {
@@ -108,7 +63,11 @@ app.post('/api/generatePost', async (req, res) => {
     });
     console.log('OpenAI client initialized');
 
-    const prompt = buildPrompt({ postType, topic, audience, style, guidelines });
+    // Use the appropriate prompt builder based on post type
+    const prompt = postType === 'thread' 
+      ? buildThreadPrompt({ topic, audience, style, guidelines })
+      : buildStandardPostPrompt({ postType, topic, audience, style, guidelines });
+    
     console.log('Built prompt:', prompt);
 
     const completion = await openai.chat.completions.create({
@@ -264,20 +223,7 @@ app.post('/api/generate-poll', async (req, res) => {
       apiKey: process.env.OPENAI_API_KEY
     });
 
-    const prompt = `
-      Generate an engaging social media poll.
-      Topic: ${topic}
-      Target Audience: ${audience}
-      Style: ${style}
-      Guidelines: ${guidelines}
-
-      Please format the response EXACTLY like this:
-      1. Poll Question
-      2. Option A
-      3. Option B
-      4. Option C
-      5. Explanation of why this poll is engaging
-    `;
+    const prompt = buildPollPrompt({ topic, audience, style, guidelines });
 
     const completion = await openai.chat.completions.create({
       model: "gpt-4o-mini",
@@ -296,11 +242,57 @@ app.post('/api/generate-poll', async (req, res) => {
     const content = completion.choices[0].message.content.trim();
     const lines = content.split('\n').filter(line => line.trim());
     
+    // Extract the title (line starting with #)
+    const titleMatch = content.match(/^#\s+(.+)$/m);
+    const title = titleMatch ? titleMatch[1].trim() : '';
+    
+    // Extract the question (line after ## Poll Question)
+    let question = '';
+    const questionMatch = content.match(/##\s+Poll\s+Question\s*\n+([^\n#]+)/i);
+    if (questionMatch) {
+      question = questionMatch[1].trim();
+    } else {
+      // Fallback to old format if needed
+      const questionLine = lines.find(line => !line.startsWith('#'));
+      if (questionLine) {
+        question = questionLine.replace(/^[0-9]+\.\s*/, '').trim();
+      }
+    }
+    
+    // Extract options (lines after ## Options)
+    const options = [];
+    const optionsSection = content.match(/##\s+Options\s*\n+([\s\S]*?)(?=\n##|$)/i);
+    
+    if (optionsSection) {
+      // Extract bullet points
+      const optionMatches = optionsSection[1].match(/[-*]\s+Option\s+[A-D]:\s+([^\n]+)/gi);
+      if (optionMatches) {
+        optionMatches.forEach(match => {
+          const option = match.replace(/[-*]\s+Option\s+[A-D]:\s+/i, '').trim();
+          options.push(option);
+        });
+      }
+    }
+    
+    // Fallback to old format if needed
+    if (options.length === 0) {
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        // Match lines that start with 2., 3., 4., or 5. followed by text
+        if (/^[2-5]\.\s/.test(line)) {
+          options.push(line.replace(/^[0-9]+\.\s*/, '').trim());
+        }
+        // Stop once we have 4 options
+        if (options.length === 4) break;
+      }
+    }
+    
     res.json({
       success: true,
       content: content,
-      question: lines[0].replace(/^[0-9]+\.\s*/, '').trim(),
-      options: lines.slice(1, 4).map(line => line.replace(/^[0-9]+\.\s*/, '').trim())
+      title: title,
+      question: question,
+      options: options
     });
   } catch (error) {
     console.error('Poll generation error:', error);
@@ -355,10 +347,13 @@ app.get('/api/generate-newsletter', async (req, res) => {
     });
 
     const prompt = buildNewsletterPrompt({ 
-      topic: topic.toString(), 
-      audience: audience.toString(), 
-      style: style?.toString() || 'Informative', 
-      guidelines: guidelines?.toString() || '' 
+      topic: topic.toString(),
+      targetAudience: audience.toString(),
+      writingStyle: style?.toString() || 'Informative',
+      additionalGuidelines: guidelines?.toString() || '',
+      newsletterType: 'industry-insights',
+      length: 'medium',
+      tone: 'professional'
     });
 
     console.log('Generated prompt:', prompt);
@@ -400,6 +395,41 @@ app.get('/api/generate-newsletter', async (req, res) => {
     });
     res.status(500).write(`data: ${JSON.stringify({ error: true, message: error.message })}\n\n`);
     res.end();
+  }
+});
+
+// Image proxy endpoint to handle CORS issues with external images
+app.get('/api/imageProxy', async (req, res) => {
+  try {
+    const imageUrl = decodeURIComponent(req.query.url || '');
+    
+    if (!imageUrl) {
+      return res.status(400).json({ message: 'No image URL provided' });
+    }
+
+    console.log('Proxying image from:', imageUrl);
+    
+    const imageResponse = await fetch(imageUrl);
+    
+    if (!imageResponse.ok) {
+      return res.status(imageResponse.status).json({ message: 'Failed to fetch image' });
+    }
+
+    const imageBuffer = await imageResponse.arrayBuffer();
+    const buffer = Buffer.from(imageBuffer);
+
+    res.set({
+      'Content-Type': imageResponse.headers.get('content-type') || 'image/jpeg',
+      'Cache-Control': 'public, max-age=86400' // Cache for 24 hours
+    });
+    
+    res.send(buffer);
+  } catch (error) {
+    console.error('Error proxying image:', error);
+    res.status(500).json({ 
+      message: 'Error proxying image', 
+      error: error.message 
+    });
   }
 });
 

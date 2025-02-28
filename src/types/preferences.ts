@@ -1,179 +1,144 @@
 import { PlatformSpecificFormat } from './platformFormats';
 
+export interface TwitterPreferences {
+  hashtagLimit?: number;
+  threadSupport?: boolean;
+  hashtagSuggestions?: boolean;
+  templateCustomization?: boolean;
+  showEngagement?: boolean;
+  enabled?: boolean;
+  handle?: string;
+  style?: string;
+  defaultHashtags?: string[];
+}
+
+export interface LinkedinPreferences {
+  professionalTone?: boolean;
+  articleSupport?: boolean;
+  pollSupport?: boolean;
+  templateCustomization?: boolean;
+  showEngagement?: boolean;
+  enabled?: boolean;
+  handle?: string;
+  style?: string;
+  defaultHashtags?: string[];
+}
+
+export interface InstagramPreferences {
+  imageFormat?: 'square' | 'portrait' | 'landscape';
+  hashtagSuggestions?: boolean;
+  templateCustomization?: boolean;
+  showEngagement?: boolean;
+  enabled?: boolean;
+  handle?: string;
+  style?: string;
+  defaultHashtags?: string[];
+}
+
+export interface FacebookPreferences {
+  linkPreview?: boolean;
+  templateCustomization?: boolean;
+  showEngagement?: boolean;
+  enabled?: boolean;
+  handle?: string;
+  style?: string;
+  defaultHashtags?: string[];
+}
+
+export interface NewsletterPreferences {
+  templateCustomization?: boolean;
+  showEngagement?: boolean;
+  enabled?: boolean;
+  handle?: string;
+  style?: string;
+  defaultHashtags?: string[];
+}
+
+export interface TikTokPreferences {
+  captionLimit?: number;
+  templateCustomization?: boolean;
+  showEngagement?: boolean;
+  enabled?: boolean;
+  handle?: string;
+  style?: string;
+  defaultHashtags?: string[];
+}
+
+export interface DiscordPreferences {
+  templateCustomization?: boolean;
+  showEngagement?: boolean;
+  enabled?: boolean;
+  handle?: string;
+  style?: string;
+  defaultHashtags?: string[];
+}
+
 export interface PlatformFormats {
-  instagram: PlatformSpecificFormat;
-  linkedin: PlatformSpecificFormat;
-  twitter: PlatformSpecificFormat;
-  tiktok: PlatformSpecificFormat;
-  facebook: PlatformSpecificFormat;
-  discord: PlatformSpecificFormat;
-  newsletter: PlatformSpecificFormat;
+  twitter: TwitterPreferences;
+  linkedin: LinkedinPreferences;
+  instagram: InstagramPreferences;
+  facebook: FacebookPreferences;
+  newsletter: NewsletterPreferences;
+  tiktok: TikTokPreferences;
+  discord: DiscordPreferences;
 }
 
 export interface UserPreferences {
-  platforms: {
-    instagram: {
-      enabled: boolean;
-      features: {
-        imageGeneration: boolean;
-        hashtagSuggestions: boolean;
-        carouselPosts: boolean;
-        storyPosts: boolean;
-        reels: boolean;
-        liveStreaming: boolean;
-        shopping: boolean;
-        affiliateMarketing: boolean;
-        brandedContent: boolean;
-        productTags: boolean;
-        donationStickers: boolean;
-        professionalTone: boolean;
-        characterLimitOptimization: boolean;
-        threadedDiscussions: boolean;
-        segmentationTips: boolean;
-        templateCustomization: boolean;
-      };
-    };
-    linkedin: {
-      enabled: boolean;
-      features: {
-        professionalTone: boolean;
-        imageGeneration: boolean;
-        hashtagSuggestions: boolean;
-        carouselPosts: boolean;
-        storyPosts: boolean;
-        reels: boolean;
-        liveStreaming: boolean;
-        shopping: boolean;
-        affiliateMarketing: boolean;
-        brandedContent: boolean;
-        productTags: boolean;
-        donationStickers: boolean;
-        threadedDiscussions: boolean;
-        segmentationTips: boolean;
-        templateCustomization: boolean;
-        characterLimitOptimization: boolean;
-      };
-    };
-    twitter: {
-      enabled: boolean;
-      features: {
-        professionalTone: boolean;
-        imageGeneration: boolean;
-        templateCustomization: boolean;
-        characterLimitOptimization: boolean;
-        segmentationTips: boolean;
-        hashtagSuggestions: boolean;
-        carouselPosts: boolean;
-        storyPosts: boolean;
-        reels: boolean;
-        liveStreaming: boolean;
-        shopping: boolean;
-        affiliateMarketing: boolean;
-        brandedContent: boolean;
-        productTags: boolean;
-        donationStickers: boolean;
-        threadedDiscussions: boolean;
-      };
-    };
-    tiktok: {
-      enabled: boolean;
-      features: {
-        professionalTone: boolean;
-        imageGeneration: boolean;
-        templateCustomization: boolean;
-        characterLimitOptimization: boolean;
-        segmentationTips: boolean;
-        hashtagSuggestions: boolean;
-        carouselPosts: boolean;
-        storyPosts: boolean;
-        reels: boolean;
-        liveStreaming: boolean;
-        shopping: boolean;
-        affiliateMarketing: boolean;
-        brandedContent: boolean;
-        productTags: boolean;
-        donationStickers: boolean;
-        threadedDiscussions: boolean;
-      };
-    };
-    facebook: {
-      enabled: boolean;
-      features: {
-        professionalTone: boolean;
-        imageGeneration: boolean;
-        templateCustomization: boolean;
-        characterLimitOptimization: boolean;
-        segmentationTips: boolean;
-        hashtagSuggestions: boolean;
-        carouselPosts: boolean;
-        storyPosts: boolean;
-        reels: boolean;
-        liveStreaming: boolean;
-        shopping: boolean;
-        affiliateMarketing: boolean;
-        brandedContent: boolean;
-        productTags: boolean;
-        donationStickers: boolean;
-        threadedDiscussions: boolean;
-      };
-    };
-    discord: {
-      enabled: boolean;
-      features: {
-        professionalTone: boolean;
-        imageGeneration: boolean;
-        templateCustomization: boolean;
-        characterLimitOptimization: boolean;
-        segmentationTips: boolean;
-        hashtagSuggestions: boolean;
-        carouselPosts: boolean;
-        storyPosts: boolean;
-        reels: boolean;
-        liveStreaming: boolean;
-        shopping: boolean;
-        affiliateMarketing: boolean;
-        brandedContent: boolean;
-        productTags: boolean;
-        donationStickers: boolean;
-        threadedDiscussions: boolean;
-      };
-    };
-    newsletter: {
-      enabled: boolean;
-      features: {
-        professionalTone: boolean;
-        imageGeneration: boolean;
-        templateCustomization: boolean;
-        characterLimitOptimization: boolean;
-        segmentationTips: boolean;
-        hashtagSuggestions: boolean;
-        carouselPosts: boolean;
-        storyPosts: boolean;
-        reels: boolean;
-        liveStreaming: boolean;
-        shopping: boolean;
-        affiliateMarketing: boolean;
-        brandedContent: boolean;
-        productTags: boolean;
-        donationStickers: boolean;
-        threadedDiscussions: boolean;
-      };
-    };
+  tone?: string;
+  writingStyle?: string;
+  targetAudience?: string;
+  useCasualTone?: boolean;
+  useProfessionalLanguage?: boolean;
+  useEmojis?: boolean;
+  formatByPlatform?: boolean;
+  includeHashtags?: boolean;
+  includeImages?: boolean;
+  aiModel?: string;
+  platforms: PlatformFormats;
+  platformPreferences: PlatformFormats;
+  contentTypes?: {
+    shortForm?: boolean;
+    longForm?: boolean;
+    threads?: boolean;
+    polls?: boolean;
   };
-  tone: 'professional' | 'casual' | 'inspirational' | 'humorous';
-  contentLength: 'short' | 'medium' | 'long';
-  defaultWritingStyle: 'technical' | 'conversational' | 'persuasive' | 'storytelling';
-  defaultAudience: 'general' | 'tech' | 'business' | 'developers';
-  platformFormats: PlatformFormats;
-  contentTypes: {
-    [key: string]: boolean;
+  tokenLimits?: {
+    twitter?: number;
+    linkedin?: number;
+    facebook?: number;
+    instagram?: number;
+    [key: string]: number | undefined;
   };
-  defaultGuidelines: [
-    'Maintain brand voice consistency',
-    'Include relevant industry keywords',
-    'Adhere to platform character limits',
-    'Use inclusive language',
-    'Follow SEO best practices'
-  ];
-  // personaTraits?: string[]; // Array of NOVA persona traits
+  darkMode?: boolean;
+  language?: string;
+  fontFamily?: string;
+  fontSize?: number;
+  timezone?: string;
+  maxContentLength?: number;
+  maxTokenCount?: number;
+  contentPreferences?: {
+    postFrequency?: 'daily' | 'weekly' | 'biweekly' | 'monthly';
+    includeEmojis?: boolean;
+    includeHashtags?: boolean;
+    includeLinks?: boolean;
+    includeMentions?: boolean;
+    contentTypes?: string[];
+    brandGuidelines?: string;
+  };
+  uiPreferences?: {
+    previewMode?: 'simple' | 'realistic';
+    showWordCount?: boolean;
+    showCharacterCount?: boolean;
+    showTokenCount?: boolean;
+    enableSpellCheck?: boolean;
+    enableAutosave?: boolean;
+  };
+  userProfile?: {
+    name?: string;
+    username?: string;
+    avatar?: string;
+    bio?: string;
+    company?: string;
+    position?: string;
+  };
 }

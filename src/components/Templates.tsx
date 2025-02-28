@@ -30,16 +30,18 @@ interface TemplateCategory {
 }
 
 interface TemplatesProps {
-  category: string;
-  onSelect: (template: Template | null, prepopulatedFields?: {
+  category?: string;
+  onSelect?: (template: Template | null, prepopulatedFields?: {
     targetAudience: string;
     writingStyle: string;
     additionalGuidelines: string;
   }) => void;
-  selected: Template | null;
+  selected?: Template | null;
+  onTemplateSelect?: (template: any) => void;
+  onNavigateToGenerator?: () => void;
 }
 
-const Templates: React.FC<TemplatesProps> = ({ category, onSelect, selected }) => {
+const Templates: React.FC<TemplatesProps> = ({ category, onSelect, selected, onTemplateSelect, onNavigateToGenerator }) => {
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
 
   const templateCategories: TemplateCategory[] = [
@@ -585,14 +587,24 @@ const Templates: React.FC<TemplatesProps> = ({ category, onSelect, selected }) =
   ];
 
   const handleTemplateSelect = (template: Template) => {
-    // Pre-populate fields based on the selected template
     const prepopulatedFields = {
       targetAudience: template.audience,
       writingStyle: template.style,
       additionalGuidelines: template.guidelines
     };
 
-    onSelect(template, prepopulatedFields);
+    // Use the appropriate callback based on what was provided
+    if (onTemplateSelect) {
+      onTemplateSelect(template);
+    } else if (onSelect) {
+      onSelect(template, prepopulatedFields);
+    }
+    
+    // Navigate to generator if callback provided
+    if (onNavigateToGenerator) {
+      onNavigateToGenerator();
+    }
+    
     setExpandedCategory(null); // Optional: collapse categories after selection
   };
 

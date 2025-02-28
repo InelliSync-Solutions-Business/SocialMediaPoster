@@ -4,7 +4,7 @@ import {
   LinkedinIcon, 
   FacebookIcon, 
   InstagramIcon,
-  MessageSquare,
+ 
   Share2,
   Copy,
   RefreshCw,
@@ -12,7 +12,8 @@ import {
   Loader2,
   Send,
   Info,
-  MailIcon
+  MailIcon,
+  Image
 } from 'lucide-react';
 import { countTokens, getPlatformTokenLimit } from '../utils/tokenUtils';
 import AILoader from './AILoader';
@@ -21,7 +22,11 @@ import { ThreadList } from './threads/ThreadList';
 import { ThreadPostProps } from './threads/ThreadPost';
 import { UserPreferences, PlatformFormats } from '../types/preferences';
 import { generateImagePrompt } from '@/utils/prompts/imagePrompt';
-import { Platform } from '../utils/platformLimits';
+import { formatContentForPlatform } from '@/utils/platformFormatters';
+import { parseContentWithHTMLTags, formatThreadedPost, parseThreads } from '@/utils/textFormatters';
+
+import { PlatformKey } from '../types/platforms';
+import PlatformPreview from './PlatformPreview';
 
 interface GeneratedContentProps {
   activeTab: string;
@@ -34,8 +39,6 @@ interface GeneratedContentProps {
   templateWritingStyle?: string;
   templateAdditionalGuidelines?: string;
 }
-
-type PlatformKey = 'instagram' | 'linkedin' | 'twitter' | 'tiktok' | 'facebook' | 'discord' | 'newsletter';
 
 export interface ThreadPost {
   id: string;
@@ -69,151 +72,13 @@ export const GeneratedContent: React.FC<GeneratedContentProps> = ({
   const [threads, setThreads] = useState<ThreadPost[]>([]);
   const [selectedThreadId, setSelectedThreadId] = useState<string | null>(null);
   const [hashtags, setHashtags] = useState<string[]>([]);
+  const [showPreview, setShowPreview] = useState(false);
 
   const contentEditableRef = useRef<HTMLDivElement>(null);
   const infoIconRef = useRef<HTMLDivElement>(null);
 
   const dummyContent = content || "Your generated content will appear here. Fill out the form and click generate to create new content.";
   const platformLimit = activeTab === 'thread-form' ? 280 : getPlatformTokenLimit(activeTab);
-
-  // Format content based on platform preferences
-  const formatContentForPlatform = (content: string, platform: PlatformKey): string => {
-    if (!content) return '';
-    let formattedContent = content;
-    const platformFormat = preferences?.platformFormats?.[platform];
-
-    const hasCharacterLimitOptimization = (format: any): format is { characterLimitOptimization: boolean } => 
-      format && 'characterLimitOptimization' in format;
-
-    const hasProfessionalTone = (format: any): format is { professionalTone: boolean } => 
-      format && 'professionalTone' in format;
-
-    // Don't apply character limit optimization for threads
-    if (platform === 'twitter' && activeTab !== 'Threads' && hasCharacterLimitOptimization(platformFormat) && platformFormat.characterLimitOptimization) {
-      formattedContent = formattedContent.slice(0, 280);
-    }
-
-    if (platform === 'linkedin' && hasProfessionalTone(platformFormat) && platformFormat.professionalTone) {
-      formattedContent = formattedContent.split('\n').filter(Boolean).join('\n\n');
-    }
-
-    // Only format as threads if the active tab is specifically for threads
-    if (activeTab === 'Threads') {
-      const threads = formatThreadedPost(formattedContent);
-      formattedContent = threads.join('\n\n');
-    }
-
-    return formattedContent;
-  };
-
-  // New method to parse and format content with HTML tags
-  const parseContentWithHTMLTags = (content: string): string => {
-    if (!content) return '';
-
-    // Split content into sections, handling both numbered lists and paragraphs
-    const sections = content.split(/\n\n/);
-    
-    let htmlContent = '';
-    let headingCount = 0;
-
-    sections.forEach((section, index) => {
-      // Check if the section starts with a number (for numbered lists)
-      const numberMatch = section.match(/^(\d+)\.\s*(.+)/);
-      
-      if (numberMatch) {
-        // If it's a numbered list item, create an <h3> for the first few items
-        if (headingCount < 3) {
-          htmlContent += `<h3>${numberMatch[1]}. ${numberMatch[2]}</h3>`;
-          headingCount++;
-        } else {
-          // After the first 3 headings, use <p> tags
-          htmlContent += `<p>${section}</p>`;
-        }
-      } else {
-        // For regular paragraphs, use <p> tags
-        htmlContent += `<p>${section}</p>`;
-      }
-    });
-
-    return htmlContent;
-  };
-
-  // Thread-specific methods
-  const formatThreadedPost = (content: string): string[] => {
-    if (!content) return [];
-    
-    // If content already contains thread separators, use them
-    if (content.includes('---')) {
-      return content.split('---')
-        .map((tweet, index) => tweet.trim())
-        .filter(tweet => tweet.length > 0)
-        .map((tweet, index) => `${index + 1}/${content.split('---').filter(t => t.trim().length > 0).length} ${tweet}`);
-    }
-    
-    // Otherwise, intelligently split the content into threads
-    const MAX_CHARS = 280; // Twitter's character limit
-    const sentences = content.match(/[^.!?]+[.!?]+/g) || [content];
-    const threads: string[] = [];
-    let currentThread = '';
-    
-    for (const sentence of sentences) {
-      const trimmedSentence = sentence.trim();
-      // Account for thread number in character count (e.g., "1/4 ")
-      const threadNumberLength = (threads.length + 2).toString().length * 2 + 2; // "X/Y "
-      const potentialThread = currentThread ? `${currentThread} ${trimmedSentence}` : trimmedSentence;
-      
-      // If adding this sentence would exceed the limit (including thread number), start a new thread
-      if ((potentialThread.length + threadNumberLength) > MAX_CHARS && currentThread) {
-        threads.push(currentThread.trim());
-        currentThread = trimmedSentence;
-      } else {
-        currentThread = potentialThread;
-      }
-    }
-    
-    // Add the last thread if there's content
-    if (currentThread) {
-      threads.push(currentThread.trim());
-    }
-    
-    // Add thread numbers to each thread
-    return threads.map((thread, index) => `${index + 1}/${threads.length} ${thread}`);
-  };
-
-  const parseThreads = (content: string): ThreadPost[] => {
-    // Split content by numbered points (1., 2., 3., etc)
-    const parts = content.split(/\d+\.\s+/);
-    
-    // Get the introduction (everything before the first number)
-    const intro = parts[0];
-    
-    // Get the numbered points (excluding the intro)
-    const points = parts.slice(1);
-    
-    const threads: ThreadPost[] = [];
-    
-    // Add intro as the first thread if it's not empty
-    if (intro.trim()) {
-      threads.push({
-        id: `thread-${0}`,
-        content: intro.trim(),
-        characterCount: intro.trim().length
-      });
-    }
-    
-    // Add each point as a separate thread
-    points.forEach((point, index) => {
-      if (point.trim()) {
-        threads.push({
-          id: `thread-${index + 1}`,
-          content: `${index + 1}. ${point.trim()}`,
-          characterCount: point.trim().length
-        });
-      }
-    });
-    
-    return threads;
-  };
 
   useEffect(() => {
     if (dummyContent) {
@@ -223,7 +88,7 @@ export const GeneratedContent: React.FC<GeneratedContentProps> = ({
       setCharacterCount(dummyContent.length);
 
       // Generate hashtags for Instagram if enabled
-      if (preferences?.platformFormats?.instagram?.hashtagSuggestions) {
+      if (preferences?.platforms?.instagram?.hashtagSuggestions) {
         // This would typically call an API to generate relevant hashtags
         setHashtags(['#content', '#socialmedia', '#digital']);
       }
@@ -234,7 +99,7 @@ export const GeneratedContent: React.FC<GeneratedContentProps> = ({
 
       // Format content based on selected platform
       const formattedContent = selectedPlatform 
-        ? formatContentForPlatform(dummyContent, selectedPlatform)
+        ? formatContentForPlatform(dummyContent, selectedPlatform, preferences?.platformPreferences)
         : dummyContent;
 
       setTruncatedContent(formattedContent);
@@ -306,7 +171,7 @@ export const GeneratedContent: React.FC<GeneratedContentProps> = ({
   const handleShare = async (platform: PlatformKey) => {
     // Check if platform is enabled in preferences
     if (platform === 'newsletter') {
-      if (preferences?.platformFormats?.newsletter && !preferences.platformFormats.newsletter.templateCustomization) {
+      if (preferences?.platforms?.newsletter && !preferences.platforms.newsletter.templateCustomization) {
         console.warn(`Newsletter is disabled in preferences`);
         return;
       }
@@ -320,7 +185,7 @@ export const GeneratedContent: React.FC<GeneratedContentProps> = ({
     setSelectedPlatform(platform);
     
     // Format content with platform-specific preferences
-    const formattedContent = formatContentForPlatform(dummyContent, platform);
+    const formattedContent = formatContentForPlatform(dummyContent, platform, preferences?.platformPreferences);
     const shareText = encodeURIComponent(formattedContent);
     
     // Get platform-specific token limit
@@ -362,53 +227,56 @@ export const GeneratedContent: React.FC<GeneratedContentProps> = ({
 
   const handleGenerateImage = async () => {
     // Check if image generation is enabled for Instagram
-    if (!preferences?.platformFormats?.instagram?.imageGeneration) {
+    if (!preferences?.platforms?.instagram?.imageFormat) {
       setImageError('Image generation is disabled in preferences');
       return;
     }
 
-    if (!content) {
-      console.error('No content available for image generation');
+    if (isGeneratingImage) {
       return;
     }
 
     setIsGeneratingImage(true);
     setImageError(null);
     setImageLoadError(false);
-    setGeneratedImageUrl(null);
 
     try {
-      console.log('Starting image generation request...');
-      const apiEndpoint = import.meta.env.PROD 
-        ? '/api/generateImage'
-        : 'http://localhost:3000/api/generateImage';
-        
-      const response = await fetch(apiEndpoint, {
+      // Generate an image prompt based on the content
+      const imagePrompt = generateImagePrompt({
+        content: content || '',
+        style: 'professional',
+        format: 'social-media',
+        platform: activeTab.toLowerCase().replace('-form', '') as 'twitter' | 'linkedin' | 'facebook' | 'instagram'
+      }, preferences);
+
+      console.log('Generated image prompt:', imagePrompt);
+
+      // Call the real API endpoint
+      const response = await fetch('/api/generateImage', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          prompt: generateImagePrompt({ content }),
-        })
+          prompt: imagePrompt
+        }),
       });
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ error: 'Failed to parse error response' }));
-        throw new Error(errorData.error || 'Failed to generate image');
+        throw new Error(`Image generation failed with status ${response.status}`);
       }
 
       const data = await response.json();
-      if (!data.success || !data.imageUrl) {
-        throw new Error('Invalid response from image generation service');
+      
+      if (!data.success) {
+        throw new Error(data.error || 'Failed to generate image');
       }
-
+      
       setGeneratedImageUrl(data.imageUrl);
-      setImageLoadError(false);
-    } catch (error: unknown) {
-      console.error('Image generation error:', error);
-      setImageError(error instanceof Error ? error.message : 'Failed to generate image. Please try again.');
-    } finally {
+      setIsGeneratingImage(false);
+    } catch (error) {
+      console.error('Error generating image:', error);
+      setImageError('Failed to generate image. Please try again.');
       setIsGeneratingImage(false);
     }
   };
@@ -497,6 +365,11 @@ export const GeneratedContent: React.FC<GeneratedContentProps> = ({
       }
 
       const data = await response.json();
+      
+      if (!data.success) {
+        throw new Error(data.error || 'Failed to generate image');
+      }
+      
       setGeneratedImageUrl(data.imageUrl);
     } catch (error) {
       console.error('Thread image generation error:', error);
@@ -554,7 +427,7 @@ export const GeneratedContent: React.FC<GeneratedContentProps> = ({
     return (
       <div 
         ref={contentEditableRef}
-        className={`w-full p-4 bg-white/5 rounded-lg border border-gray-200 dark:border-gray-700 ${isEditing ? 'cursor-text' : 'cursor-default'}`}
+        className={`w-full p-4 bg-white/5 rounded-lg border border-gray-200 dark:border-gray-700 ${isEditing ? 'cursor-text' : 'cursor-default'} formatted-content`}
         contentEditable={isEditing}
         suppressContentEditableWarning={true}
         dangerouslySetInnerHTML={{ __html: htmlFormattedContent }}
@@ -572,6 +445,10 @@ export const GeneratedContent: React.FC<GeneratedContentProps> = ({
         onBlur={() => {
           setIsEditing(false);
           // Optional: You can add additional logic here if needed when editing ends
+        }}
+        style={{
+          lineHeight: '1.6',
+          fontSize: '1rem',
         }}
       />
     );
@@ -720,7 +597,20 @@ export const GeneratedContent: React.FC<GeneratedContentProps> = ({
                 transition-colors duration-300
               `}
             >
-              <Loader2 size={20} />
+              {isGeneratingImage ? <Loader2 className="animate-spin" size={20} /> : <Image size={20} />}
+            </button>
+          </TooltipWrapper>
+
+          <TooltipWrapper title="Toggle Preview" disabled={isLoading}>
+            <button 
+              onClick={() => setShowPreview(!showPreview)}
+              className={`
+                p-2 rounded-full 
+                ${showPreview ? 'bg-primary text-primary-foreground' : 'hover:bg-secondary/50 dark:hover:bg-secondary/20'}
+                transition-colors duration-300
+              `}
+            >
+              <Share2 size={20} />
             </button>
           </TooltipWrapper>
 
@@ -737,7 +627,18 @@ export const GeneratedContent: React.FC<GeneratedContentProps> = ({
         </div>
       </div>
 
-      {(generatedImageUrl || isGeneratingImage) && (
+      {/* Platform Preview */}
+      {showPreview && dummyContent && (
+        <PlatformPreview 
+          content={dummyContent}
+          selectedPlatform={selectedPlatform}
+          preferences={preferences}
+          generatedImageUrl={generatedImageUrl}
+          onPlatformSelect={setSelectedPlatform}
+        />
+      )}
+
+      {(generatedImageUrl || isGeneratingImage) && !showPreview && (
         <div className="w-full flex flex-col items-center justify-center gap-4 mt-4">
           {isGeneratingImage ? (
             <div className="w-full max-w-md">
@@ -787,7 +688,7 @@ export const GeneratedContent: React.FC<GeneratedContentProps> = ({
         </div>
       )}
 
-      {selectedPlatform && (
+      {selectedPlatform && !showPreview && (
         <div className="flex items-center gap-2 text-sm text-foreground/60">
           <Share2 className="w-4 h-4" />
           <span>Opening share dialog for {selectedPlatform}...</span>

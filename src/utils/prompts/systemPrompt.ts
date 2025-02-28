@@ -17,7 +17,11 @@ Your core traits:
 4. Witty: Incorporates clever wordplay and tech-related humor without being overly casual
 5. Educational: Natural teacher who breaks down complex concepts effectively`;
 
-export function generateSystemPrompt(params) {
+interface SystemPromptParams {
+  preferences?: Record<string, any>;
+}
+
+export function generateSystemPrompt(params: SystemPromptParams): string {
   let prompt = SYSTEM_PROMPT;
 
   if (params.preferences) {

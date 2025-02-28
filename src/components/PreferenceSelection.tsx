@@ -48,354 +48,125 @@ const PreferenceSelection: React.FC<PreferenceSelectionProps> = ({
     platforms: {
       instagram: {
         enabled: false,
-        features: {
-          imageGeneration: false,
-          hashtagSuggestions: false,
-          carouselPosts: false,
-          storyPosts: false,
-          reels: false,
-          liveStreaming: false,
-          shopping: false,
-          affiliateMarketing: false,
-          brandedContent: false,
-          productTags: false,
-          donationStickers: false,
-          professionalTone: false,
-          characterLimitOptimization: false,
-          threadedDiscussions: false,
-          segmentationTips: false,
-          templateCustomization: false
-        }
+        imageFormat: 'square',
+        hashtagSuggestions: false,
+        templateCustomization: false,
+        showEngagement: false,
+        handle: '',
+        style: '',
+        defaultHashtags: []
       },
       linkedin: {
         enabled: false,
-        features: {
-          professionalTone: false,
-          imageGeneration: false,
-          hashtagSuggestions: false,
-          carouselPosts: false,
-          storyPosts: false,
-          reels: false,
-          liveStreaming: false,
-          shopping: false,
-          affiliateMarketing: false,
-          brandedContent: false,
-          productTags: false,
-          donationStickers: false,
-          threadedDiscussions: false,
-          segmentationTips: false,
-          templateCustomization: false,
-          characterLimitOptimization: false,
-         
-      
-  
-        }
+        professionalTone: false,
+        articleSupport: false,
+        pollSupport: false,
+        templateCustomization: false,
+        showEngagement: false,
+        handle: '',
+        style: '',
+        defaultHashtags: []
       },
       twitter: {
         enabled: false,
-        features: {
-          characterLimitOptimization: false,
-          imageGeneration: false,
-          hashtagSuggestions: false,
-          carouselPosts: false,
-          storyPosts: false,
-          reels: false,
-          liveStreaming: false,
-          shopping: false,
-          affiliateMarketing: false,
-          brandedContent: false,
-          productTags: false,
-          donationStickers: false,
-          professionalTone: false,
-          threadedDiscussions: false,
-          segmentationTips: false,
-          templateCustomization: false,
-          
-       
-          
-        }
+        hashtagLimit: 5,
+        threadSupport: false,
+        hashtagSuggestions: false,
+        templateCustomization: false,
+        showEngagement: false,
+        handle: '',
+        style: '',
+        defaultHashtags: []
       },
       tiktok: {
         enabled: false,
-        features: {
-      
-          imageGeneration: false,
-          hashtagSuggestions: false,
-          carouselPosts: false,
-          storyPosts: false,
-          reels: false,
-          liveStreaming: false,
-          shopping: false,
-          affiliateMarketing: false,
-          brandedContent: false,
-          productTags: false,
-          donationStickers: false,
-          professionalTone: false,
-          characterLimitOptimization: false,
-          threadedDiscussions: false,
-          segmentationTips: false,
-          templateCustomization: false,
-     
-       
-        }
+        captionLimit: 150,
+        templateCustomization: false,
+        showEngagement: false,
+        handle: '',
+        style: '',
+        defaultHashtags: []
       },
       facebook: {
         enabled: false,
-        features: {
-      
-          imageGeneration: false,
-          hashtagSuggestions: false,
-          carouselPosts: false,
-          storyPosts: false,
-          reels: false,
-          liveStreaming: false,
-          shopping: false,
-          affiliateMarketing: false,
-          brandedContent: false,
-          productTags: false,
-          donationStickers: false,
-          professionalTone: false,
-          characterLimitOptimization: false,
-          threadedDiscussions: false,
-          segmentationTips: false,
-          templateCustomization: false,
-     
-     
-        }
+        linkPreview: false,
+        templateCustomization: false,
+        showEngagement: false,
+        handle: '',
+        style: '',
+        defaultHashtags: []
       },
       discord: {
         enabled: false,
-        features: {
-          threadedDiscussions: false,
-      
-          imageGeneration: false,
-          hashtagSuggestions: false,
-          carouselPosts: false,
-          storyPosts: false,
-          reels: false,
-          liveStreaming: false,
-          shopping: false,
-          affiliateMarketing: false,
-          brandedContent: false,
-          productTags: false,
-          donationStickers: false,
-          professionalTone: false,
-          characterLimitOptimization: false,
-          segmentationTips: false,
-          templateCustomization: false,
-   
-
-        }
+        templateCustomization: false,
+        showEngagement: false,
+        handle: '',
+        style: '',
+        defaultHashtags: []
       },
       newsletter: {
         enabled: false,
-        features: {
-          imageGeneration: false,
-          hashtagSuggestions: false,
-          carouselPosts: false,
-          storyPosts: false,
-          reels: false,
-          liveStreaming: false,
-          shopping: false,
-          affiliateMarketing: false,
-          brandedContent: false,
-          productTags: false,
-          donationStickers: false,
-          professionalTone: false,
-          characterLimitOptimization: false,
-          threadedDiscussions: false,
-          segmentationTips: false,
-          templateCustomization: false,
-       
-        }
+        templateCustomization: false,
+        showEngagement: false,
+        handle: '',
+        style: '',
+        defaultHashtags: []
       }
     },
     tone: 'professional',
-    contentTypes: {
-      motivational: true,
-      educational: true,
-      promotional: true,
-      personal: true
+    contentPreferences: {
+      contentTypes: [
+        'Maintain brand voice consistency',
+        'Include relevant industry keywords',
+        'Adhere to platform character limits',
+        'Use inclusive language',
+        'Follow SEO best practices'
+      ],
+      postFrequency: 'weekly'
     },
-    contentLength: 'medium',
-    defaultWritingStyle: 'conversational',
-    defaultAudience: 'tech',
-    platformFormats: {
+    maxContentLength: 500,
+    writingStyle: 'conversational',
+    targetAudience: 'tech',
+    platformPreferences: {
       instagram: {
-        imageGeneration: false,
-        hashtagSuggestions: false,
-        carouselPosts: false,
-        storyPosts: false,
-        reels: false,
-        liveStreaming: false,
-        shopping: false,
-        affiliateMarketing: false,
-        brandedContent: false,
-        productTags: false,
-        donationStickers: false,
-       
-   
-        professionalTone: false,
-        characterLimitOptimization: false,
-        trendingHashtags: false,
-        communityEngagement: false,
-        threadedDiscussions: false,
-        communityInteraction: false,
-      
-        segmentationTips: false,
-        templateCustomization: false
+        imageFormat: 'square',
+        hashtagSuggestions: true,
+        templateCustomization: true,
+        showEngagement: true
       },
       linkedin: {
-        imageGeneration: false,
-        hashtagSuggestions: false,
-        carouselPosts: false,
-        storyPosts: false,
-        reels: false,
-        liveStreaming: false,
-        shopping: false,
-        affiliateMarketing: false,
-        brandedContent: false,
-        productTags: false,
-        donationStickers: false,
-    
-
-        professionalTone: false,
-        characterLimitOptimization: false,
-        trendingHashtags: false,
-        communityEngagement: false,
-        threadedDiscussions: false,
-        communityInteraction: false,
-
-        segmentationTips: false,
-        templateCustomization: false
+        professionalTone: true,
+        articleSupport: true,
+        pollSupport: false,
+        templateCustomization: true,
+        showEngagement: true
       },
       twitter: {
-        imageGeneration: false,
-        hashtagSuggestions: false,
-        carouselPosts: false,
-        storyPosts: false,
-        reels: false,
-        liveStreaming: false,
-        shopping: false,
-        affiliateMarketing: false,
-        brandedContent: false,
-        productTags: false,
-        donationStickers: false,
-
-
-        professionalTone: false,
-        characterLimitOptimization: false,
-        trendingHashtags: false,
-        communityEngagement: false,
-        threadedDiscussions: false,
-        communityInteraction: false,
-
-        segmentationTips: false,
-        templateCustomization: false
-      },
-      tiktok: {
-        imageGeneration: false,
-        hashtagSuggestions: false,
-        carouselPosts: false,
-        storyPosts: false,
-        reels: false,
-        liveStreaming: false,
-        shopping: false,
-        affiliateMarketing: false,
-        brandedContent: false,
-        productTags: false,
-        donationStickers: false,
-
-       professionalTone: false,
-        characterLimitOptimization: false,
-        trendingHashtags: false,
-        communityEngagement: false,
-        threadedDiscussions: false,
-        communityInteraction: false,
-
-        segmentationTips: false,
-        templateCustomization: false
+        hashtagLimit: 3,
+        threadSupport: true,
+        hashtagSuggestions: true,
+        templateCustomization: true,
+        showEngagement: true
       },
       facebook: {
-        imageGeneration: false,
-        hashtagSuggestions: false,
-        carouselPosts: false,
-        storyPosts: false,
-        reels: false,
-        liveStreaming: false,
-        shopping: false,
-        affiliateMarketing: false,
-        brandedContent: false,
-        productTags: false,
-        donationStickers: false,
- 
-
-        professionalTone: false,
-        characterLimitOptimization: false,
-        trendingHashtags: false,
-        communityEngagement: false,
-        threadedDiscussions: false,
-        communityInteraction: false,
-
-        segmentationTips: false,
-        templateCustomization: false
-      },
-      discord: {
-        imageGeneration: false,
-        hashtagSuggestions: false,
-        carouselPosts: false,
-        storyPosts: false,
-        reels: false,
-        liveStreaming: false,
-        shopping: false,
-        affiliateMarketing: false,
-        brandedContent: false,
-        productTags: false,
-        donationStickers: false,
- 
-   
-        professionalTone: false,
-        characterLimitOptimization: false,
-        trendingHashtags: false,
-        communityEngagement: false,
-        threadedDiscussions: false,
-        communityInteraction: false,
-
-        segmentationTips: false,
-        templateCustomization: false
+        linkPreview: true,
+        templateCustomization: true,
+        showEngagement: true
       },
       newsletter: {
-        imageGeneration: false,
-        hashtagSuggestions: false,
-        carouselPosts: false,
-        storyPosts: false,
-        reels: false,
-        liveStreaming: false,
-        shopping: false,
-        affiliateMarketing: false,
-        brandedContent: false,
-        productTags: false,
-        donationStickers: false,
- 
-
-        professionalTone: false,
-        characterLimitOptimization: false,
-        trendingHashtags: false,
-        communityEngagement: false,
-        threadedDiscussions: false,
-        communityInteraction: false,
-
-        segmentationTips: false,
-        templateCustomization: false
+        templateCustomization: true,
+        showEngagement: false
+      },
+      tiktok: {
+        captionLimit: 150,
+        templateCustomization: true,
+        showEngagement: true
+      },
+      discord: {
+        templateCustomization: false,
+        showEngagement: false
       }
-    },
-    defaultGuidelines: [
-      'Maintain brand voice consistency',
-      'Include relevant industry keywords',
-      'Adhere to platform character limits',
-      'Use inclusive language',
-      'Follow SEO best practices'
-    ]
+    }
   };
 
   const [preferences, setPreferences] = useState(initialPreferences);
@@ -564,11 +335,11 @@ const PreferenceSelection: React.FC<PreferenceSelectionProps> = ({
               <div className="space-y-2">
                 <Label>Content Length</Label>
                 <Select
-                  value={preferences.contentLength}
+                  value={preferences.maxContentLength?.toString() || "500"}
                   onValueChange={(value) =>
                     setPreferences({
                       ...preferences,
-                      contentLength: value as UserPreferences['contentLength']
+                      maxContentLength: parseInt(value)
                     })
                   }
                 >
@@ -576,9 +347,9 @@ const PreferenceSelection: React.FC<PreferenceSelectionProps> = ({
                     <SelectValue placeholder="Select content length" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="short">Short</SelectItem>
-                    <SelectItem value="medium">Medium</SelectItem>
-                    <SelectItem value="long">Long</SelectItem>
+                    <SelectItem value="280">Short (280 chars)</SelectItem>
+                    <SelectItem value="500">Medium (500 chars)</SelectItem>
+                    <SelectItem value="1000">Long (1000 chars)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -590,49 +361,81 @@ const PreferenceSelection: React.FC<PreferenceSelectionProps> = ({
               <div className="grid grid-cols-2 gap-4">
                 <div className="flex items-center space-x-2">
                   <Switch
-                    checked={preferences.contentTypes.motivational}
-                    onCheckedChange={(checked) =>
+                    checked={preferences.contentPreferences?.contentTypes?.includes('motivational') || false}
+                    onCheckedChange={(checked) => {
+                      const currentTypes = preferences.contentPreferences?.contentTypes || [];
+                      const newTypes = checked 
+                        ? [...currentTypes, 'motivational'] 
+                        : currentTypes.filter(type => type !== 'motivational');
+                      
                       setPreferences({
                         ...preferences,
-                        contentTypes: { ...preferences.contentTypes, motivational: checked }
-                      })
-                    }
+                        contentPreferences: {
+                          ...preferences.contentPreferences,
+                          contentTypes: newTypes
+                        }
+                      });
+                    }}
                   />
                   <Label>Motivational</Label>
                 </div>
                 <div className="flex items-center space-x-2">
                   <Switch
-                    checked={preferences.contentTypes.educational}
-                    onCheckedChange={(checked) =>
+                    checked={preferences.contentPreferences?.contentTypes?.includes('educational') || false}
+                    onCheckedChange={(checked) => {
+                      const currentTypes = preferences.contentPreferences?.contentTypes || [];
+                      const newTypes = checked 
+                        ? [...currentTypes, 'educational'] 
+                        : currentTypes.filter(type => type !== 'educational');
+                      
                       setPreferences({
                         ...preferences,
-                        contentTypes: { ...preferences.contentTypes, educational: checked }
-                      })
-                    }
+                        contentPreferences: {
+                          ...preferences.contentPreferences,
+                          contentTypes: newTypes
+                        }
+                      });
+                    }}
                   />
                   <Label>Educational</Label>
                 </div>
                 <div className="flex items-center space-x-2">
                   <Switch
-                    checked={preferences.contentTypes.promotional}
-                    onCheckedChange={(checked) =>
+                    checked={preferences.contentPreferences?.contentTypes?.includes('promotional') || false}
+                    onCheckedChange={(checked) => {
+                      const currentTypes = preferences.contentPreferences?.contentTypes || [];
+                      const newTypes = checked 
+                        ? [...currentTypes, 'promotional'] 
+                        : currentTypes.filter(type => type !== 'promotional');
+                      
                       setPreferences({
                         ...preferences,
-                        contentTypes: { ...preferences.contentTypes, promotional: checked }
-                      })
-                    }
+                        contentPreferences: {
+                          ...preferences.contentPreferences,
+                          contentTypes: newTypes
+                        }
+                      });
+                    }}
                   />
                   <Label>Promotional</Label>
                 </div>
                 <div className="flex items-center space-x-2">
                   <Switch
-                    checked={preferences.contentTypes.personal}
-                    onCheckedChange={(checked) =>
+                    checked={preferences.contentPreferences?.contentTypes?.includes('personal') || false}
+                    onCheckedChange={(checked) => {
+                      const currentTypes = preferences.contentPreferences?.contentTypes || [];
+                      const newTypes = checked 
+                        ? [...currentTypes, 'personal'] 
+                        : currentTypes.filter(type => type !== 'personal');
+                      
                       setPreferences({
                         ...preferences,
-                        contentTypes: { ...preferences.contentTypes, personal: checked }
-                      })
-                    }
+                        contentPreferences: {
+                          ...preferences.contentPreferences,
+                          contentTypes: newTypes
+                        }
+                      });
+                    }}
                   />
                   <Label>Personal</Label>
                 </div>

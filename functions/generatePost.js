@@ -1,8 +1,8 @@
 import { OpenAI } from 'openai';
 import dotenv from 'dotenv';
 import { SYSTEM_PROMPT } from '../src/utils/prompts/systemPrompt.ts';
-import CONTENT_PROMPTS from '../src/utils/prompts/contentPrompts';
-import { buildNewsletterPrompt, generateNewsletter } from './newsletterPost.js';
+import CONTENT_PROMPTS from '../src/utils/prompts/contentPrompts.ts';
+import { buildNewsletterPrompt, generateNewsletter } from '../src/utils/prompts/promptManager.ts';
 dotenv.config();
 
 const CONTENT_PROMPTS_MAP = {
