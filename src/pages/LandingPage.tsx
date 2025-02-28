@@ -17,53 +17,82 @@ interface ExtendedParticlesProps extends IParticlesProps {
   init?: (engine: Engine) => Promise<void>;
 }
 
-const particlesConfig = {
-  particles: {
-    number: { value: 80, density: { enable: true, value_area: 800 } },
-    color: { value: "#ffffff" },
-    shape: { type: "circle" },
-    opacity: { value: 0.5, random: false },
-    size: { value: 3, random: true },
-    line_linked: { enable: true, distance: 150, color: "#ffffff", opacity: 0.4, width: 1 },
-    move: { 
-      enable: true, 
-      speed: 2, 
-      direction: "none" as const, 
-      random: false, 
-      straight: false, 
-      out_mode: "out", 
-      bounce: false 
-    }
-  },
-  interactivity: {
-    detect_on: "canvas",
-    events: {
-      onhover: {
-        enable: true,
-        mode: "repulse"
+const LandingPage: React.FC = () => {
+  const [isDarkMode, setIsDarkMode] = useState(false);
+
+  // Check if dark mode is enabled
+  useEffect(() => {
+    const isDark = document.documentElement.classList.contains('dark');
+    setIsDarkMode(isDark);
+
+    // Set up a mutation observer to detect theme changes
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.attributeName === 'class') {
+          const isDark = document.documentElement.classList.contains('dark');
+          setIsDarkMode(isDark);
+        }
+      });
+    });
+
+    observer.observe(document.documentElement, { attributes: true });
+
+    return () => observer.disconnect();
+  }, []);
+
+  // Configure particles based on theme
+  const particlesConfig = {
+    particles: {
+      number: { value: 80, density: { enable: true, value_area: 800 } },
+      color: { value: isDarkMode ? "#ffffff" : "#3b82f6" },
+      shape: { type: "circle" },
+      opacity: { value: isDarkMode ? 0.5 : 0.3, random: false },
+      size: { value: 3, random: true },
+      line_linked: { 
+        enable: true, 
+        distance: 150, 
+        color: isDarkMode ? "#ffffff" : "#3b82f6", 
+        opacity: isDarkMode ? 0.4 : 0.3, 
+        width: 1 
       },
-      resize: {
-        enable: true
+      move: { 
+        enable: true, 
+        speed: 2, 
+        direction: "none" as const, 
+        random: false, 
+        straight: false, 
+        out_mode: "out", 
+        bounce: false 
       }
     },
-    modes: {
-      repulse: {
-        distance: 100,
-        duration: 0.4
+    interactivity: {
+      detect_on: "canvas",
+      events: {
+        onhover: {
+          enable: true,
+          mode: "repulse"
+        },
+        resize: {
+          enable: true
+        }
+      },
+      modes: {
+        repulse: {
+          distance: 100,
+          duration: 0.4
+        }
       }
-    }
-  },
-  retina_detect: true
-};
+    },
+    retina_detect: true
+  };
 
-const particlesProps: ExtendedParticlesProps = {
-  id: "tsparticles",
-  init: async (engine: Engine) => await loadSlim(engine),
-  options: particlesConfig,
-  className: "absolute inset-0 z-0"
-};
+  const particlesProps: ExtendedParticlesProps = {
+    id: "tsparticles",
+    init: async (engine: Engine) => await loadSlim(engine),
+    options: particlesConfig,
+    className: "absolute inset-0 z-0"
+  };
 
-const LandingPage: React.FC = () => {
   const features = [
     {
       title: "Image Generation",
@@ -126,6 +155,17 @@ const LandingPage: React.FC = () => {
     }
   ];
 
+  // Define text color classes based on theme
+  const textColorClass = isDarkMode ? "text-white" : "text-gray-800";
+  const textMutedClass = isDarkMode ? "text-white/70" : "text-gray-600";
+  const cardBgClass = isDarkMode ? "bg-white/10" : "bg-white/80";
+  const buttonBgClass = isDarkMode ? "bg-white/10" : "bg-blue-600";
+  const buttonHoverClass = isDarkMode ? "hover:bg-white/20" : "hover:bg-blue-700";
+  const buttonTextClass = isDarkMode ? "text-white" : "text-white";
+  const borderClass = isDarkMode ? "border-white/20" : "border-blue-400";
+  const capabilityBgClass = isDarkMode ? "bg-white/10" : "bg-blue-100";
+  const capabilityTextClass = isDarkMode ? "text-white/80" : "text-blue-800";
+
   return (
     <motion.div 
       initial={{ opacity: 0 }}
@@ -142,7 +182,7 @@ const LandingPage: React.FC = () => {
           initial={{ y: -50, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.7 }}
-          className="text-5xl font-bold mb-6 text-white"
+          className={`text-5xl font-bold mb-6 ${textColorClass}`}
         >
           AI-Powered Social Media Transformation
         </motion.h1>
@@ -151,7 +191,7 @@ const LandingPage: React.FC = () => {
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ duration: 0.5, delay: 0.3 }}
-          className="max-w-2xl mx-auto bg-white/10 backdrop-blur-lg rounded-xl p-6 shadow-2xl"
+          className={`max-w-2xl mx-auto ${cardBgClass} backdrop-blur-lg rounded-xl p-6 shadow-2xl`}
         >
           <TypeAnimation
             sequence={[
@@ -165,7 +205,7 @@ const LandingPage: React.FC = () => {
             wrapper="p"
             cursor={true}
             repeat={0}
-            className="text-xl text-white mb-4"
+            className={`text-xl ${textColorClass} mb-4`}
           />
           <motion.div 
             initial={{ y: 50, opacity: 0 }}
@@ -174,19 +214,19 @@ const LandingPage: React.FC = () => {
             className="mt-10"
           >
             <Link 
-              to="/generate" 
-              className="
-                bg-white/10 backdrop-blur-lg
-                text-white
+              to="/app/generator" 
+              className={`
+                ${buttonBgClass} backdrop-blur-lg
+                ${buttonTextClass}
                 px-10 py-4 rounded-full text-lg 
-                hover:bg-white/20
+                ${buttonHoverClass}
                 transition-all duration-300
                 inline-block shadow-lg hover:shadow-xl
                 transform hover:-translate-y-1
-                border border-white/20
+                border ${borderClass}
                 font-semibold
-                focus:outline-none focus:ring-2 focus:ring-white/30
-              "
+                focus:outline-none focus:ring-2 focus:ring-blue-400
+              `}
             >
               Start Your Content Journey
             </Link>
@@ -195,27 +235,27 @@ const LandingPage: React.FC = () => {
       </section>
 
       {/* Features Section */}
-      <section className="relative z-10 container mx-auto px-6 py-16 text-white">
-        <h2 className="text-3xl font-bold text-center mb-12">Unleash Your Content Potential</h2>
+      <section className="relative z-10 container mx-auto px-6 py-16">
+        <h2 className={`text-3xl font-bold text-center mb-12 ${textColorClass}`}>Unleash Your Content Potential</h2>
         <div className="grid md:grid-cols-3 gap-8">
           {features.map((feature, index) => (
             <motion.div 
               key={index}
               whileHover={{ scale: 1.05 }}
-              className="bg-white/10 backdrop-blur-lg p-6 rounded-xl border border-white/20"
+              className={`${cardBgClass} backdrop-blur-lg p-6 rounded-xl border ${borderClass}`}
             >
               <div className="flex items-center mb-4">
-                <feature.icon className="w-8 h-8 mr-3 text-white/80" strokeWidth={1.5} />
-                <h3 className="text-xl font-semibold">{feature.title}</h3>
+                <feature.icon className={`w-8 h-8 mr-3 ${isDarkMode ? "text-white/80" : "text-blue-600"}`} strokeWidth={1.5} />
+                <h3 className={`text-xl font-semibold ${textColorClass}`}>{feature.title}</h3>
               </div>
-              <p className="mb-4 text-white/70">{feature.description}</p>
+              <p className={`mb-4 ${textMutedClass}`}>{feature.description}</p>
               <div className="flex flex-wrap gap-2">
                 {feature.capabilities.map((capability, idx) => (
                   <span 
                     key={idx} 
-                    className="
-                      bg-white/10 px-3 py-1 rounded-full 
-                      text-sm text-white/80"
+                    className={`
+                      ${capabilityBgClass} px-3 py-1 rounded-full 
+                      text-sm ${capabilityTextClass}`}
                   >
                     {capability}
                   </span>
@@ -227,8 +267,8 @@ const LandingPage: React.FC = () => {
       </section>
 
       {/* Testimonials Section */}
-      <section className="relative z-10 container mx-auto px-6 py-16 text-white text-center">
-        <h2 className="text-3xl font-bold mb-12">What Our Users Say</h2>
+      <section className="relative z-10 container mx-auto px-6 py-16 text-center">
+        <h2 className={`text-3xl font-bold mb-12 ${textColorClass}`}>What Our Users Say</h2>
         <div className="grid md:grid-cols-2 gap-8">
           {testimonials.map((testimonial, index) => (
             <motion.div 
@@ -236,9 +276,9 @@ const LandingPage: React.FC = () => {
               initial={{ opacity: 0, y: 50 }}
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
-              className="bg-white/10 backdrop-blur-lg p-6 rounded-xl"
+              className={`${cardBgClass} backdrop-blur-lg p-6 rounded-xl`}
             >
-              <p className="italic mb-4">"{testimonial.quote}"</p>
+              <p className={`italic mb-4 ${textColorClass}`}>"{testimonial.quote}"</p>
               <div className="flex items-center justify-center">
                 <img 
                   src={testimonial.avatar} 
@@ -246,8 +286,8 @@ const LandingPage: React.FC = () => {
                   className="w-16 h-16 rounded-full mr-4"
                 />
                 <div>
-                  <h4 className="font-semibold">{testimonial.name}</h4>
-                  <p className="text-sm text-white/70">{testimonial.role}</p>
+                  <h4 className={`font-semibold ${textColorClass}`}>{testimonial.name}</h4>
+                  <p className={`text-sm ${textMutedClass}`}>{testimonial.role}</p>
                 </div>
               </div>
             </motion.div>
@@ -261,24 +301,24 @@ const LandingPage: React.FC = () => {
           initial={{ scale: 0.9, opacity: 0 }}
           whileInView={{ scale: 1, opacity: 1 }}
           transition={{ duration: 0.5 }}
-          className="bg-white/10 backdrop-blur-lg rounded-xl p-12"
+          className={`${cardBgClass} backdrop-blur-lg rounded-xl p-12`}
         >
-          <h2 className="text-4xl font-bold mb-6 text-white">Ready to Revolutionize Your Content?</h2>
-          <p className="text-xl mb-8 text-white/70">Join thousands of creators who are transforming their social media strategy</p>
+          <h2 className={`text-4xl font-bold mb-6 ${textColorClass}`}>Ready to Revolutionize Your Content?</h2>
+          <p className={`text-xl mb-8 ${textMutedClass}`}>Join thousands of creators who are transforming their social media strategy</p>
           <Link 
             to="/pricing" 
-            className="
-              bg-white/10 backdrop-blur-lg
-              text-white
+            className={`
+              ${buttonBgClass} backdrop-blur-lg
+              ${buttonTextClass}
               px-12 py-4 rounded-full text-lg 
-              hover:bg-white/20
+              ${buttonHoverClass}
               transition-all duration-300
               inline-block shadow-lg hover:shadow-xl
               transform hover:-translate-y-1
-              border border-white/20
+              border ${borderClass}
               font-semibold
-              focus:outline-none focus:ring-2 focus:ring-white/30
-            "
+              focus:outline-none focus:ring-2 focus:ring-blue-400
+            `}
           >
             Start Your Free Trial
           </Link>

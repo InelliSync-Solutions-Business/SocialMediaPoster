@@ -456,11 +456,11 @@ export const GeneratedContent: React.FC<GeneratedContentProps> = ({
 
   return (
     <div className="space-y-4">
-      <h2 className="text-xl font-semibold">
+      <h2 className="text-xl font-semibold gradient-text">
         Generated {activeTab === 'short-form' ? 'Posts' : activeTab === 'long-form' ? 'Long Form Post' : activeTab === 'image' ? 'Image' : activeTab === 'Threads' ? 'Thread' : activeTab === 'Templates' ? 'Template' : 'Content'}
       </h2>
 
-      <div className="bg-secondary/20 dark:bg-[#1a1b26] rounded-lg p-6 border border-border/50 backdrop-blur-sm shadow-soft dark:shadow-[0_0_15px_rgba(0,0,0,0.1)]">
+      <div className="bg-card-gradient rounded-lg p-6 border border-border/50 backdrop-blur-sm shadow-primary/10 dark:shadow-[0_0_15px_rgba(0,0,0,0.1)]">
         {activeTab === 'thread-form' && threads.length > 0 ? (
           <ThreadList 
             threads={threads} 
@@ -476,170 +476,172 @@ export const GeneratedContent: React.FC<GeneratedContentProps> = ({
           renderContent()
         )}
         
-        <div className="flex justify-between items-center">
-          <div className={`text-sm ${getCharacterCountColor()}`}>
+        <div className="flex justify-between items-center mt-4">
+          <div className={`text-sm ${getCharacterCountColor()} font-medium`}>
             {characterCount} / {platformLimit} characters
           </div>
           {tokenCount > 0 && (
-            <div className="text-xs text-foreground/50 mr-4">
+            <div className="text-xs text-foreground/60 mr-4">
               Tokens: {tokenCount}
             </div>
           )}
-          <TooltipWrapper title="Share on Twitter" disabled={isLoading}>
-            <button 
-              onClick={() => handleShare('twitter')}
-              className={`
-                p-2 rounded-full 
-                ${selectedPlatform === 'twitter' ? 'bg-[#1DA1F2] text-white' : 'hover:bg-secondary/50 dark:hover:bg-secondary/20'}
-                transition-colors duration-300
-              `}
-            >
-              <TwitterIcon size={20} />
-            </button>
-          </TooltipWrapper>
-          
-          <TooltipWrapper title="Share on LinkedIn" disabled={isLoading}>
-            <button 
-              onClick={() => handleShare('linkedin')}
-              className={`
-                p-2 rounded-full 
-                ${selectedPlatform === 'linkedin' ? 'bg-[#0A66C2] text-white' : 'hover:bg-secondary/50 dark:hover:bg-secondary/20'}
-                transition-colors duration-300
-              `}
-            >
-              <LinkedinIcon size={20} />
-            </button>
-          </TooltipWrapper>
-          
-          <TooltipWrapper title="Share on Facebook" disabled={isLoading}>
-            <button 
-              onClick={() => handleShare('facebook')}
-              className={`p-2 rounded-lg transition-colors duration-200
-              ${selectedPlatform === 'facebook' ? 'bg-[#1877F2] text-white' : 'hover:bg-secondary/50 dark:hover:bg-secondary/20'}
-              ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
-              disabled={isLoading}
-            >
-              <FacebookIcon size={20} />
-            </button>
-          </TooltipWrapper>
-          
-          <TooltipWrapper title="Share on Instagram" disabled={isLoading}>
-            <button 
-              onClick={() => handleShare('instagram')}
-              className={`
-                p-2 rounded-full 
-                ${selectedPlatform === 'instagram' ? 'bg-[#E1306C] text-white' : 'hover:bg-secondary/50 dark:hover:bg-secondary/20'}
-                transition-colors duration-300
-              `}
-            >
-              <InstagramIcon size={20} />
-            </button>
-          </TooltipWrapper>
-          
-        
-          
-          <TooltipWrapper title="Share on Newsletter" disabled={isLoading}>
-            <button 
-              onClick={() => handleShare('newsletter')}
-              className={`
-                p-2 rounded-full 
-                ${selectedPlatform === 'newsletter' ? 'bg-[#4a90e2] text-white' : 'hover:bg-secondary/50 dark:hover:bg-secondary/20'}
-                transition-colors duration-300
-              `}
-            >
-              <MailIcon size={20} />
-            </button>
-          </TooltipWrapper>
+          <div className="flex items-center gap-2">
+            <TooltipWrapper title="Share on Twitter" disabled={isLoading}>
+              <button 
+                onClick={() => handleShare('twitter')}
+                className={`
+                  p-2 rounded-full 
+                  ${selectedPlatform === 'twitter' ? 'bg-gradient-primary text-white shadow-primary' : 'hover:bg-card-hover-gradient hover:shadow-soft'}
+                  transition-all duration-300
+                `}
+              >
+                <TwitterIcon size={20} />
+              </button>
+            </TooltipWrapper>
+            
+            <TooltipWrapper title="Share on LinkedIn" disabled={isLoading}>
+              <button 
+                onClick={() => handleShare('linkedin')}
+                className={`
+                  p-2 rounded-full 
+                  ${selectedPlatform === 'linkedin' ? 'bg-gradient-primary text-white shadow-primary' : 'hover:bg-card-hover-gradient hover:shadow-soft'}
+                  transition-all duration-300
+                `}
+              >
+                <LinkedinIcon size={20} />
+              </button>
+            </TooltipWrapper>
+            
+            <TooltipWrapper title="Share on Facebook" disabled={isLoading}>
+              <button 
+                onClick={() => handleShare('facebook')}
+                className={`p-2 rounded-full transition-all duration-300
+                ${selectedPlatform === 'facebook' ? 'bg-gradient-primary text-white shadow-primary' : 'hover:bg-card-hover-gradient hover:shadow-soft'}
+                ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                disabled={isLoading}
+              >
+                <FacebookIcon size={20} />
+              </button>
+            </TooltipWrapper>
+            
+            <TooltipWrapper title="Share on Instagram" disabled={isLoading}>
+              <button 
+                onClick={() => handleShare('instagram')}
+                className={`
+                  p-2 rounded-full 
+                  ${selectedPlatform === 'instagram' ? 'bg-gradient-primary text-white shadow-primary' : 'hover:bg-card-hover-gradient hover:shadow-soft'}
+                  transition-all duration-300
+                `}
+              >
+                <InstagramIcon size={20} />
+              </button>
+            </TooltipWrapper>
+            
+            <TooltipWrapper title="Share on Newsletter" disabled={isLoading}>
+              <button 
+                onClick={() => handleShare('newsletter')}
+                className={`
+                  p-2 rounded-full 
+                  ${selectedPlatform === 'newsletter' ? 'bg-gradient-primary text-white shadow-primary' : 'hover:bg-card-hover-gradient hover:shadow-soft'}
+                  transition-all duration-300
+                `}
+              >
+                <MailIcon size={20} />
+              </button>
+            </TooltipWrapper>
 
-          <TooltipWrapper title="Copy Content" disabled={isLoading}>
-            <button 
-              onClick={copyToClipboard}
-              className={`
-                p-2 rounded-full 
-                ${copied ? 'bg-green-500 text-white' : 'hover:bg-secondary/50 dark:hover:bg-secondary/20'}
-                transition-colors duration-300
-              `}
-            >
-              {copied ? <Send size={20} /> : <Copy size={20} />}
-            </button>
-          </TooltipWrapper>
+            <TooltipWrapper title="Copy Content" disabled={isLoading}>
+              <button 
+                onClick={copyToClipboard}
+                className={`
+                  p-2 rounded-full 
+                  ${copied ? 'bg-gradient-success text-white shadow-success' : 'hover:bg-card-hover-gradient hover:shadow-soft'}
+                  transition-all duration-300
+                `}
+              >
+                {copied ? <Send size={20} /> : <Copy size={20} />}
+              </button>
+            </TooltipWrapper>
 
-          <TooltipWrapper title="Clear Content" disabled={isLoading}>
-            <button 
-              onClick={handleClear}
-              className="p-2 rounded-full hover:bg-destructive/20 hover:text-destructive transition-colors duration-300"
-            >
-              <Trash2 size={20} />
-            </button>
-          </TooltipWrapper>
+            <TooltipWrapper title="Clear Content" disabled={isLoading}>
+              <button 
+                onClick={handleClear}
+                className="p-2 rounded-full hover:bg-gradient-destructive hover:text-white hover:shadow-destructive transition-all duration-300"
+              >
+                <Trash2 size={20} />
+              </button>
+            </TooltipWrapper>
 
-          <TooltipWrapper title="Regenerate Content" disabled={isLoading}>
-            <button 
-              onClick={handleRegenerate}
-              disabled={isLoading}
-              className={`
-                p-2 rounded-full 
-                ${isLoading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-secondary/50 dark:hover:bg-secondary/20'}
-                transition-colors duration-300
-              `}
-            >
-              <RefreshCw size={20} />
-            </button>
-          </TooltipWrapper>
+            <TooltipWrapper title="Regenerate Content" disabled={isLoading}>
+              <button 
+                onClick={handleRegenerate}
+                disabled={isLoading}
+                className={`
+                  p-2 rounded-full 
+                  ${isLoading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-card-hover-gradient hover:shadow-soft'}
+                  transition-all duration-300
+                `}
+              >
+                <RefreshCw size={20} />
+              </button>
+            </TooltipWrapper>
 
-          <TooltipWrapper title="Generate Image" disabled={isLoading || !content}>
-            <button 
-              onClick={handleGenerateImage}
-              disabled={isGeneratingImage || !content}
-              className={`
-                p-2 rounded-full 
-                ${isGeneratingImage ? 'opacity-50 cursor-not-allowed' : 'hover:bg-secondary/50 dark:hover:bg-secondary/20'}
-                transition-colors duration-300
-              `}
-            >
-              {isGeneratingImage ? <Loader2 className="animate-spin" size={20} /> : <Image size={20} />}
-            </button>
-          </TooltipWrapper>
+            <TooltipWrapper title="Generate Image" disabled={isLoading || !content}>
+              <button 
+                onClick={handleGenerateImage}
+                disabled={isGeneratingImage || !content}
+                className={`
+                  p-2 rounded-full 
+                  ${isGeneratingImage ? 'opacity-50 cursor-not-allowed' : 'hover:bg-card-hover-gradient hover:shadow-soft'}
+                  transition-all duration-300
+                `}
+              >
+                {isGeneratingImage ? <Loader2 className="animate-spin" size={20} /> : <Image size={20} />}
+              </button>
+            </TooltipWrapper>
 
-          <TooltipWrapper title="Toggle Preview" disabled={isLoading}>
-            <button 
-              onClick={() => setShowPreview(!showPreview)}
-              className={`
-                p-2 rounded-full 
-                ${showPreview ? 'bg-primary text-primary-foreground' : 'hover:bg-secondary/50 dark:hover:bg-secondary/20'}
-                transition-colors duration-300
-              `}
-            >
-              <Share2 size={20} />
-            </button>
-          </TooltipWrapper>
+            <TooltipWrapper title="Toggle Preview" disabled={isLoading}>
+              <button 
+                onClick={() => setShowPreview(!showPreview)}
+                className={`
+                  p-2 rounded-full 
+                  ${showPreview ? 'bg-gradient-primary text-white shadow-primary' : 'hover:bg-card-hover-gradient hover:shadow-soft'}
+                  transition-all duration-300
+                `}
+              >
+                <Share2 size={20} />
+              </button>
+            </TooltipWrapper>
 
-          <TooltipWrapper title="Token Information" disabled={isLoading}>
-            <div 
-              ref={infoIconRef}
-              onMouseEnter={() => setShowInfoTooltip(true)}
-              onMouseLeave={() => setShowInfoTooltip(false)}
-              className="p-2 rounded-full hover:bg-secondary/50 dark:hover:bg-secondary/20 transition-colors duration-300 cursor-help"
-            >
-              <Info size={20} />
-            </div>
-          </TooltipWrapper>
+            <TooltipWrapper title="Token Information" disabled={isLoading}>
+              <div 
+                ref={infoIconRef}
+                onMouseEnter={() => setShowInfoTooltip(true)}
+                onMouseLeave={() => setShowInfoTooltip(false)}
+                className="p-2 rounded-full hover:bg-card-hover-gradient hover:shadow-soft transition-all duration-300 cursor-help"
+              >
+                <Info size={20} />
+              </div>
+            </TooltipWrapper>
+          </div>
         </div>
       </div>
 
       {/* Platform Preview */}
       {showPreview && dummyContent && (
-        <PlatformPreview 
-          content={dummyContent}
-          selectedPlatform={selectedPlatform}
-          preferences={preferences}
-          generatedImageUrl={generatedImageUrl}
-          onPlatformSelect={setSelectedPlatform}
-        />
+        <div className="mt-4 bg-card-gradient rounded-lg p-6 border border-border/50 backdrop-blur-sm shadow-primary/10 dark:shadow-[0_0_15px_rgba(0,0,0,0.1)]">
+          <PlatformPreview 
+            content={dummyContent}
+            selectedPlatform={selectedPlatform}
+            preferences={preferences}
+            generatedImageUrl={generatedImageUrl}
+            onPlatformSelect={setSelectedPlatform}
+          />
+        </div>
       )}
 
       {(generatedImageUrl || isGeneratingImage) && !showPreview && (
-        <div className="w-full flex flex-col items-center justify-center gap-4 mt-4">
+        <div className="w-full flex flex-col items-center justify-center gap-4 mt-4 bg-card-gradient rounded-lg p-6 border border-border/50 backdrop-blur-sm shadow-primary/10 dark:shadow-[0_0_15px_rgba(0,0,0,0.1)]">
           {isGeneratingImage ? (
             <div className="w-full max-w-md">
               <AILoader 
@@ -651,7 +653,7 @@ export const GeneratedContent: React.FC<GeneratedContentProps> = ({
           ) : (
             <div className="flex flex-col items-center justify-center gap-4">
               {generatedImageUrl && (
-                <div className="relative w-full max-w-md aspect-square rounded-lg overflow-hidden shadow-lg">
+                <div className="relative w-full max-w-md aspect-square rounded-lg overflow-hidden shadow-primary">
                   <img
                     src={generatedImageUrl}
                     alt="Generated content"
@@ -669,12 +671,12 @@ export const GeneratedContent: React.FC<GeneratedContentProps> = ({
                     }}
                   />
                   {imageLoadError && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-gray-100 dark:bg-gray-800">
+                    <div className="absolute inset-0 flex items-center justify-center bg-card-gradient">
                       <div className="text-center p-4">
-                        <p className="text-sm text-gray-500 mb-2">Failed to load image.</p>
+                        <p className="text-sm text-foreground/70 mb-2">Failed to load image.</p>
                         <button
                           onClick={handleGenerateImage}
-                          className="text-sm text-primary hover:text-primary/80"
+                          className="text-sm text-primary hover:text-primary/80 font-medium"
                         >
                           Try Again
                         </button>
@@ -689,7 +691,7 @@ export const GeneratedContent: React.FC<GeneratedContentProps> = ({
       )}
 
       {selectedPlatform && !showPreview && (
-        <div className="flex items-center gap-2 text-sm text-foreground/60">
+        <div className="flex items-center gap-2 text-sm text-foreground/60 mt-2">
           <Share2 className="w-4 h-4" />
           <span>Opening share dialog for {selectedPlatform}...</span>
         </div>

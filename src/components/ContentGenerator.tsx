@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import GeneratedContent from './GeneratedContent';
 import AILoader from './AILoader';
 import { UserPreferences } from '../types/preferences';
+import { GenerateParams } from '../App';
 
 interface ContentGeneratorProps {
   userPreferences?: UserPreferences;
@@ -40,15 +41,15 @@ const ContentGenerator: React.FC<ContentGeneratorProps> = ({ userPreferences }) 
     setGuidelines(e.target.value);
   };
 
-  const handleGenerate = async (params: {
-    postType: string;
-    topic: string;
-    writingStyle: string;
-    targetAudience: string;
-    additionalGuidelines: string;
-  }) => {
+  const handleGenerate = async (params: GenerateParams) => {
+    if (!params.topic) {
+      alert('Please enter a topic');
+      return;
+    }
+
     setIsLoading(true);
-    
+    setGeneratedContent(null);
+
     try {
       // Call the real API endpoint
       const response = await fetch('/api/generatePost', {
@@ -78,7 +79,7 @@ const ContentGenerator: React.FC<ContentGeneratorProps> = ({ userPreferences }) 
       setGeneratedContent(data.isThread ? JSON.stringify(data.content) : data.content);
     } catch (error) {
       console.error('Error generating content:', error);
-      // You might want to show an error message to the user here
+      alert('Failed to generate content. Please try again.');
     } finally {
       setIsLoading(false);
     }

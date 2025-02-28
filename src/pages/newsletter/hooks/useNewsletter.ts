@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo } from 'react';
-import { Newsletter, NewsletterFormData, GeneratedNewsletter } from '../types/newsletter';
+import { Newsletter, NewsletterFormData, GeneratedNewsletter, TokenUsage } from '../types/newsletter';
 
 type StreamingState = {
   content: string;
@@ -16,6 +16,7 @@ interface UseNewsletterResult {
   clearNewsletter: () => void;
   updateContent: (content: string) => void;
   streamingState: StreamingState;
+  tokenUsage?: TokenUsage;
 }
 
 export const useNewsletter = (): UseNewsletterResult => {
@@ -25,100 +26,69 @@ export const useNewsletter = (): UseNewsletterResult => {
   const [error, setError] = useState<string | null>(null);
   const [lastSubmittedData, setLastSubmittedData] = useState<NewsletterFormData | null>(null);
   const [streamingState, setStreamingState] = useState<StreamingState>({ content: '', isDone: false });
+  const [tokenUsage, setTokenUsage] = useState<TokenUsage | undefined>(undefined);
 
   const handleSubmit = useCallback(async (data: NewsletterFormData) => {
     setIsLoading(true);
     setError(null);
     setLastSubmittedData(data);
     setStreamingState({ content: '', isDone: false });
+    setTokenUsage(undefined);
     
     try {
-      const response = await fetch(`/api/generate-newsletter?${
-        new URLSearchParams(Object.fromEntries(
-          Object.entries({
-            topic: data.topic,
-            audience: data.targetAudience,
-            tone: data.tone,
-            theme: data.theme || '',
-            keyPoints: (data.keyPoints || []).join(','),
-            length: data.length
-          }).filter(([_, v]) => v != null && v !== '')
-        ))
-      }`);
+      // Use fetch API to make a POST request to the server
+      const response = await fetch('/api/generate-newsletter', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          topic: data.topic,
+          type: data.type,
+          tone: data.tone,
+          length: data.length,
+          writingStyle: data.writingStyle,
+          targetAudience: data.targetAudience,
+          keyPoints: data.keyPoints || [],
+          additionalGuidelines: data.additionalGuidelines || '',
+          model: data.model
+        }),
+      });
 
-      const eventSource = new EventSource(response.url);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to generate newsletter');
+      }
 
-      let accumulatedContent = '';
-      let errorOccurred = false;
+      const result = await response.json();
+      
+      // Store token usage information
+      if (result.usage) {
+        setTokenUsage({
+          inputTokens: result.usage.inputTokens,
+          outputTokens: result.usage.outputTokens,
+          estimatedCost: result.usage.estimatedCost
+        });
+      }
 
-      eventSource.onmessage = (event) => {
-        try {
-          const parsedData = JSON.parse(event.data);
-
-          // Handle error messages
-          if (parsedData.error) {
-            errorOccurred = true;
-            setError(parsedData.message || 'An unknown error occurred');
-            eventSource.close();
-            setIsLoading(false);
-            return;
-          }
-
-          // Handle content chunks
-          if (parsedData.content) {
-            accumulatedContent += parsedData.content;
-            setStreamingState({ content: accumulatedContent, isDone: false });
-          }
-
-          // Handle final message
-          if (parsedData.done) {
-            eventSource.close();
-            setStreamingState({ content: accumulatedContent, isDone: true });
-            setNewsletter(data);
-            setGeneratedContent({
-              content: accumulatedContent,
-              metadata: {
-                topic: data.topic,
-                length: data.length,
-                writingStyle: data.writingStyle,
-                targetAudience: data.targetAudience,
-                newsletterType: data.type,
-                tone: data.tone
-              }
-            });
-            setIsLoading(false);
-          }
-        } catch (parseError) {
-          console.error('Error parsing event data:', parseError);
-        }
-      };
-
-      eventSource.onerror = (error) => {
-        console.error('EventSource failed:', error);
-        eventSource.close();
-        setError('Failed to generate newsletter. Please try again.');
-        setIsLoading(false);
-      };
-
-      // Timeout to prevent hanging
-      const timeoutId = setTimeout(() => {
-        if (eventSource.readyState !== EventSource.CLOSED) {
-          eventSource.close();
-          setError('Newsletter generation timed out. Please try again.');
-          setIsLoading(false);
-        }
-      }, 60000); // 60 seconds timeout
-
-      // Cleanup function to close EventSource and clear timeout
-      return () => {
-        eventSource.close();
-        clearTimeout(timeoutId);
-      };
-
+      setNewsletter(data);
+      setGeneratedContent({
+        content: result.content,
+        metadata: {
+          topic: data.topic,
+          length: data.length,
+          writingStyle: data.writingStyle,
+          targetAudience: data.targetAudience,
+          newsletterType: data.type,
+          tone: data.tone
+        },
+        usage: result.usage
+      });
+      
+      setIsLoading(false);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'An error occurred';
-      setError(errorMessage);
-      console.error('Newsletter generation error:', errorMessage);
+      console.error('Error generating newsletter:', err);
+      setError(err instanceof Error ? err.message : 'An unknown error occurred');
       setIsLoading(false);
     }
   }, []);
@@ -126,21 +96,22 @@ export const useNewsletter = (): UseNewsletterResult => {
   const regenerateNewsletter = useCallback(async () => {
     if (lastSubmittedData) {
       await handleSubmit(lastSubmittedData);
-    } else {
-      setError('No previous newsletter data to regenerate');
     }
   }, [lastSubmittedData, handleSubmit]);
 
   const clearNewsletter = useCallback(() => {
     setNewsletter(undefined);
     setGeneratedContent(undefined);
-    setLastSubmittedData(null);
     setError(null);
+    setTokenUsage(undefined);
   }, []);
 
   const updateContent = useCallback((content: string) => {
     if (generatedContent) {
-      setGeneratedContent({ ...generatedContent, content });
+      setGeneratedContent({
+        ...generatedContent,
+        content
+      });
     }
   }, [generatedContent]);
 
@@ -155,6 +126,7 @@ export const useNewsletter = (): UseNewsletterResult => {
     clearNewsletter,
     updateContent,
     streamingState,
+    tokenUsage
   }), [
     newsletter, 
     generatedContent, 
@@ -164,6 +136,7 @@ export const useNewsletter = (): UseNewsletterResult => {
     regenerateNewsletter, 
     clearNewsletter,
     updateContent,
-    streamingState
+    streamingState,
+    tokenUsage
   ]);
 };

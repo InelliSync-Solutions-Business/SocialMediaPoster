@@ -5,25 +5,45 @@ export const lightTheme = createTheme({
   palette: {
     mode: 'light',
     primary: {
-      main: '#3f51b5',
-      light: '#757de8',
-      dark: '#002984',
+      main: '#3b82f6', // Vibrant blue
+      light: '#60a5fa',
+      dark: '#2563eb',
       contrastText: '#ffffff',
     },
     secondary: {
-      main: '#f50057',
-      light: '#ff4081',
-      dark: '#c51162',
+      main: '#10b981', // Teal
+      light: '#34d399',
+      dark: '#059669',
       contrastText: '#ffffff',
     },
     background: {
-      default: '#f5f5f5',
+      default: '#f8fafc', // Very light blue-gray
       paper: '#ffffff',
     },
     text: {
-      primary: 'rgba(0, 0, 0, 0.87)',
-      secondary: 'rgba(0, 0, 0, 0.6)',
+      primary: '#1e293b', // Dark blue-gray
+      secondary: '#475569', // Medium blue-gray
       disabled: 'rgba(0, 0, 0, 0.38)',
+    },
+    error: {
+      main: '#ef4444', // Red
+      light: '#f87171',
+      dark: '#dc2626',
+    },
+    warning: {
+      main: '#f59e0b', // Amber
+      light: '#fbbf24',
+      dark: '#d97706',
+    },
+    info: {
+      main: '#0ea5e9', // Sky blue
+      light: '#38bdf8',
+      dark: '#0284c7',
+    },
+    success: {
+      main: '#10b981', // Emerald
+      light: '#34d399',
+      dark: '#059669',
     },
   },
   typography: {
@@ -64,9 +84,27 @@ export const lightTheme = createTheme({
           padding: '8px 16px',
         },
         containedPrimary: {
-          boxShadow: '0 2px 4px 0 rgba(63, 81, 181, 0.2)',
+          background: 'linear-gradient(135deg, #3b82f6, #6366f1)',
+          boxShadow: '0 2px 4px 0 rgba(59, 130, 246, 0.2)',
           '&:hover': {
-            boxShadow: '0 4px 8px 0 rgba(63, 81, 181, 0.3)',
+            background: 'linear-gradient(135deg, #2563eb, #4f46e5)',
+            boxShadow: '0 4px 8px 0 rgba(59, 130, 246, 0.3)',
+          },
+        },
+        containedSecondary: {
+          background: 'linear-gradient(135deg, #10b981, #0ea5e9)',
+          boxShadow: '0 2px 4px 0 rgba(16, 185, 129, 0.2)',
+          '&:hover': {
+            background: 'linear-gradient(135deg, #059669, #0284c7)',
+            boxShadow: '0 4px 8px 0 rgba(16, 185, 129, 0.3)',
+          },
+        },
+        outlined: {
+          borderWidth: 2,
+        },
+        outlinedPrimary: {
+          '&:hover': {
+            backgroundColor: 'rgba(59, 130, 246, 0.04)',
           },
         },
       },
@@ -76,6 +114,72 @@ export const lightTheme = createTheme({
         root: {
           borderRadius: 12,
           boxShadow: '0 4px 12px 0 rgba(0, 0, 0, 0.05)',
+          background: 'linear-gradient(120deg, #ffffff, #f8fafc)',
+          '&:hover': {
+            boxShadow: '0 6px 16px 0 rgba(0, 0, 0, 0.08)',
+            transform: 'translateY(-2px)',
+            transition: 'all 0.3s ease',
+          },
+        },
+      },
+    },
+    MuiPaper: {
+      styleOverrides: {
+        root: {
+          borderRadius: 12,
+        },
+        elevation1: {
+          boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)',
+        },
+        elevation2: {
+          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+        },
+        elevation3: {
+          boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+        },
+      },
+    },
+    MuiTextField: {
+      styleOverrides: {
+        root: {
+          '& .MuiOutlinedInput-root': {
+            '&:hover fieldset': {
+              borderColor: '#3b82f6',
+              borderWidth: '2px',
+            },
+            '&.Mui-focused fieldset': {
+              borderColor: '#3b82f6',
+              boxShadow: '0 0 0 3px rgba(59, 130, 246, 0.1)',
+            },
+          },
+        },
+      },
+    },
+    MuiSwitch: {
+      styleOverrides: {
+        root: {
+          width: 42,
+          height: 26,
+          padding: 0,
+        },
+        switchBase: {
+          padding: 1,
+          '&.Mui-checked': {
+            transform: 'translateX(16px)',
+            color: '#fff',
+            '& + .MuiSwitch-track': {
+              backgroundColor: '#3b82f6',
+              opacity: 1,
+            },
+          },
+        },
+        thumb: {
+          width: 24,
+          height: 24,
+        },
+        track: {
+          borderRadius: 13,
+          backgroundColor: '#e9e9ea',
         },
       },
     },

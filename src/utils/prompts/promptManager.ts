@@ -5,6 +5,8 @@ import { generateImagePrompt as imagePromptGenerator } from './imagePrompt';
 import { generateLongFormPrompt } from './longFormPrompt';
 import { generateShortFormPrompt } from './shortFormPrompt';
 import { OpenAI } from 'openai';
+import { AIModel } from '@/pages/newsletter/types/newsletter';
+import { AI_MODELS, estimateTokenCount, calculateCost } from '@/utils/ai/modelInfo';
 
 // Helper function to build standard post prompt
 export function buildStandardPostPrompt({ postType, topic, audience, style, guidelines }: {
@@ -194,77 +196,81 @@ export async function generateNewsletter(params: {
   newsletterType: string; 
   tone: 'professional' | 'inspirational' | 'conversational' | 'analytical';
   additionalGuidelines?: string;
+  model?: string;
 }) {
-  // Validate required parameters
-  if (!params.topic || !params.targetAudience) {
-    throw new Error('Missing required parameters: topic and targetAudience are required');
+  try {
+    // Build the prompt
+    const prompt = buildNewsletterPrompt(params);
+    
+    // Estimate tokens and cost
+    const inputTokens = estimateTokenCount(prompt);
+    const estimatedOutputTokens = 
+      params.length === 'short' ? 2000 :
+      params.length === 'medium' ? 4000 : 6000;
+    
+    const model = getOpenAIModel(params.model);
+    const estimatedCost = calculateCost(model as AIModel, inputTokens, estimatedOutputTokens);
+    
+    console.log(`Estimated tokens - Input: ${inputTokens}, Output: ${estimatedOutputTokens}`);
+    console.log(`Estimated cost: $${estimatedCost.toFixed(6)}`);
+    
+    // Initialize OpenAI client
+    const openai = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY || '',
+    });
+
+    // Generate content
+    const response = await openai.chat.completions.create({
+      model: model,
+      messages: [
+        {
+          role: 'system',
+          content: 'You are a professional content writer specializing in newsletters. Create well-structured, engaging content with proper markdown formatting.'
+        },
+        {
+          role: 'user',
+          content: prompt
+        }
+      ],
+      temperature: 0.7,
+      max_tokens: params.length === 'short' ? 1500 : params.length === 'medium' ? 2500 : 3500,
+    });
+
+    // Extract and return the generated content
+    const content = response.choices[0]?.message?.content || '';
+    
+    // Log actual token usage
+    const actualInputTokens = response.usage?.prompt_tokens || 0;
+    const actualOutputTokens = response.usage?.completion_tokens || 0;
+    const actualCost = calculateCost(model as AIModel, actualInputTokens, actualOutputTokens);
+    
+    console.log(`Actual tokens - Input: ${actualInputTokens}, Output: ${actualOutputTokens}`);
+    console.log(`Actual cost: $${actualCost.toFixed(6)}`);
+    
+    return {
+      content,
+      usage: {
+        inputTokens: actualInputTokens,
+        outputTokens: actualOutputTokens,
+        estimatedCost: actualCost
+      }
+    };
+  } catch (error) {
+    console.error('Error generating newsletter:', error);
+    throw error;
+  }
+}
+
+// Helper function to get valid OpenAI model name
+const getOpenAIModel = (modelPreference?: string): string => {
+  // If the model exists in our AI_MODELS object, return its ID
+  if (modelPreference && Object.keys(AI_MODELS).includes(modelPreference as AIModel)) {
+    return modelPreference;
   }
   
-  console.log('Received newsletter generation request:', { 
-    topic: params.topic, 
-    length: params.length, 
-    writingStyle: params.writingStyle, 
-    targetAudience: params.targetAudience, 
-    newsletterType: params.newsletterType, 
-    tone: params.tone, 
-    additionalGuidelines: params.additionalGuidelines 
-  });
-
-  const openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY
-  });
-  console.log('OpenAI client initialized');
-
-  const prompt = buildNewsletterPrompt(params);
-
-  const lengthConfig = {
-    short: {
-      wordCount: [800, 1200],
-      description: "Concise and to-the-point newsletter"
-    },
-    medium: {
-      wordCount: [1200, 2000],
-      description: "Balanced newsletter with key insights"
-    },
-    long: {
-      wordCount: [2000, 3000],
-      description: "Comprehensive newsletter with in-depth exploration"
-    }
-  }[params.length] || {
-    wordCount: [1200, 2000],
-    description: "Balanced newsletter with key insights"
-  };
-
-  const toneConfig = {
-    professional: {
-      temperature: 0.65
-    },
-    inspirational: {
-      temperature: 0.85
-    },
-    conversational: {
-      temperature: 0.75
-    },
-    analytical: {
-      temperature: 0.6
-    }
-  }[params.tone] || {
-    temperature: 0.65
-  };
-
-  const completion = await openai.chat.completions.create({
-    model: "gpt-4o-mini",
-    messages: [
-      { role: 'system', content: prompt }
-    ],
-    temperature: toneConfig.temperature || 0.7,
-    max_tokens: lengthConfig.wordCount[1],
-    presence_penalty: 0,
-    frequency_penalty: 0
-  });
-
-  return completion.choices[0].message.content;
-}
+  // Default to gpt-4o-mini
+  return 'gpt-4o-mini';
+};
 
 // Helper function to parse thread content
 export function parseThreadContent(content: string) {

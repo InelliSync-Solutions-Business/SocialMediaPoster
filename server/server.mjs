@@ -8,7 +8,7 @@ import {
   buildPollPrompt, 
   parseThreadContent,
   buildNewsletterPrompt
-} from '../src/utils/prompts/promptManager.ts';
+} from './promptAdapter.mjs';
 
 dotenv.config();
 
@@ -39,7 +39,7 @@ app.get('/api/health', (req, res) => {
 // Generate post endpoint
 app.post('/api/generatePost', async (req, res) => {
   try {
-    const { postType, topic, audience, style, guidelines } = req.body;
+    const { postType, topic, audience, style, guidelines, model } = req.body;
     console.log('Received request:', { postType, topic, audience, style, guidelines });
 
     // Input validation
@@ -63,6 +63,28 @@ app.post('/api/generatePost', async (req, res) => {
     });
     console.log('OpenAI client initialized');
 
+    // Helper function to get valid OpenAI model name
+    const getOpenAIModel = (modelPreference) => {
+      const validModels = {
+        'gpt-4o': 'gpt-4o',
+        'gpt-4o-mini': 'gpt-4o-mini',
+        'gpt-3.5-turbo': 'gpt-3.5-turbo',
+        'gpt-4.5': 'gpt-4.5',
+        'o1': 'o1',
+        'o1-mini': 'o1-mini'
+      };
+      
+      // Check if the model is valid
+      if (modelPreference && validModels[modelPreference]) {
+        console.log(`Using requested model: ${modelPreference}`);
+        return validModels[modelPreference];
+      }
+      
+      // Default to gpt-4o-mini
+      console.log(`Defaulting to gpt-4o-mini (requested: ${modelPreference || 'none'})`);
+      return 'gpt-4o-mini';
+    };
+
     // Use the appropriate prompt builder based on post type
     const prompt = postType === 'thread' 
       ? buildThreadPrompt({ topic, audience, style, guidelines })
@@ -71,7 +93,7 @@ app.post('/api/generatePost', async (req, res) => {
     console.log('Built prompt:', prompt);
 
     const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
+      model: getOpenAIModel(model),
       messages: [
         {
           role: 'system',
@@ -117,12 +139,22 @@ Technical Guidelines:
       res.json({
         success: true,
         content: threadPosts,
-        isThread: true
+        isThread: true,
+        usage: {
+          inputTokens: completion.usage?.prompt_tokens || 0,
+          outputTokens: completion.usage?.completion_tokens || 0,
+          totalTokens: completion.usage?.total_tokens || 0
+        }
       });
     } else {
       res.json({
         success: true,
-        content: generatedContent
+        content: generatedContent,
+        usage: {
+          inputTokens: completion.usage?.prompt_tokens || 0,
+          outputTokens: completion.usage?.completion_tokens || 0,
+          totalTokens: completion.usage?.total_tokens || 0
+        }
       });
     }
   } catch (error) {
@@ -142,7 +174,7 @@ Technical Guidelines:
 // Generate image endpoint
 app.post('/api/generateImage', async (req, res) => {
   try {
-    const { prompt } = req.body;
+    const { prompt, model } = req.body;
     console.log('Received image generation request:', { prompt });
 
     // Input validation
@@ -167,7 +199,7 @@ app.post('/api/generateImage', async (req, res) => {
 
     console.log('Sending request to OpenAI...');
     const response = await openai.images.generate({
-      model: "dall-e-3",
+      model: getOpenAIModel(model),
       prompt: prompt,
       n: 1,
       size: "1024x1024",
@@ -186,7 +218,12 @@ app.post('/api/generateImage', async (req, res) => {
 
     res.json({
       success: true,
-      imageUrl: response.data[0].url
+      imageUrl: response.data[0].url,
+      usage: {
+        inputTokens: response.usage?.prompt_tokens || 0,
+        outputTokens: response.usage?.completion_tokens || 0,
+        totalTokens: response.usage?.total_tokens || 0
+      }
     });
   } catch (error) {
     console.error('Image generation error:', error);
@@ -200,7 +237,7 @@ app.post('/api/generateImage', async (req, res) => {
 // Generate poll endpoint
 app.post('/api/generate-poll', async (req, res) => {
   try {
-    const { topic, audience, style, guidelines } = req.body;
+    const { topic, audience, style, guidelines, model } = req.body;
     console.log('Received poll generation request:', { topic, audience, style, guidelines });
 
     // Input validation
@@ -226,7 +263,7 @@ app.post('/api/generate-poll', async (req, res) => {
     const prompt = buildPollPrompt({ topic, audience, style, guidelines });
 
     const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
+      model: getOpenAIModel(model),
       messages: [
         {
           role: 'system',
@@ -292,7 +329,12 @@ app.post('/api/generate-poll', async (req, res) => {
       content: content,
       title: title,
       question: question,
-      options: options
+      options: options,
+      usage: {
+        inputTokens: completion.usage?.prompt_tokens || 0,
+        outputTokens: completion.usage?.completion_tokens || 0,
+        totalTokens: completion.usage?.total_tokens || 0
+      }
     });
   } catch (error) {
     console.error('Poll generation error:', error);
@@ -313,7 +355,7 @@ app.get('/api/generate-newsletter', async (req, res) => {
       query: req.query
     });
 
-    const { topic, audience, style, guidelines } = req.query;
+    const { topic, audience, style, guidelines, model } = req.query;
     console.log('Received newsletter generation request:', { topic, audience, style, guidelines });
 
     // Input validation
@@ -359,11 +401,13 @@ app.get('/api/generate-newsletter', async (req, res) => {
     console.log('Generated prompt:', prompt);
 
     const stream = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
+      model: getOpenAIModel(model),
       messages: [
         {
           role: 'system',
-          content: `You are an AI newsletter generation assistant for Intellisync Solutions. Create engaging, informative newsletters tailored to specific audiences.`
+          content: `You are an AI newsletter generation assistant for Intellisync Solutions. Create engaging, informative newsletters tailored to specific audiences. 
+Format your response in proper markdown with headings (using # syntax), lists (using - or * syntax), emphasis (**bold** or *italic*), and other markdown elements as appropriate.
+Always include a clear structure with a title, date placeholder, introduction, well-organized sections, and a conclusion.`
         },
         {
           role: 'user',
@@ -395,6 +439,43 @@ app.get('/api/generate-newsletter', async (req, res) => {
     });
     res.status(500).write(`data: ${JSON.stringify({ error: true, message: error.message })}\n\n`);
     res.end();
+  }
+});
+
+// Newsletter generation endpoint
+app.post('/api/generate-newsletter', async (req, res) => {
+  try {
+    console.log('Received newsletter generation request:', req.body);
+    
+    // Validate required fields
+    if (!req.body.topic || !req.body.targetAudience) {
+      return res.status(400).json({ error: 'Missing required parameters: topic and targetAudience are required' });
+    }
+    
+    // Import the generateNewsletter function from promptManager
+    const { generateNewsletter } = await import('../src/utils/prompts/promptManager.js');
+    
+    // Generate the newsletter
+    const result = await generateNewsletter({
+      topic: req.body.topic,
+      length: req.body.length || 'medium',
+      writingStyle: req.body.writingStyle || 'Informative',
+      targetAudience: req.body.targetAudience,
+      newsletterType: req.body.type || 'tech-trends',
+      tone: req.body.tone || 'professional',
+      additionalGuidelines: req.body.additionalGuidelines || '',
+      model: req.body.model || 'gpt-4o-mini',
+      keyPoints: req.body.keyPoints || []
+    });
+    
+    // Return the generated content and usage information
+    res.json({
+      content: result.content,
+      usage: result.usage
+    });
+  } catch (error) {
+    console.error('Error generating newsletter:', error);
+    res.status(500).json({ error: 'Failed to generate newsletter content' });
   }
 });
 

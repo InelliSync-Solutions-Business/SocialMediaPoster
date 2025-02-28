@@ -37,7 +37,7 @@ interface TemplatesProps {
     additionalGuidelines: string;
   }) => void;
   selected?: Template | null;
-  onTemplateSelect?: (template: any) => void;
+  onTemplateSelect?: (template: Template) => void;
   onNavigateToGenerator?: () => void;
 }
 
