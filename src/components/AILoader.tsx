@@ -7,6 +7,7 @@ interface AILoaderProps {
   onClick?: () => Promise<void>;
   children?: React.ReactNode;
   message?: string;
+  loadingOnly?: boolean;
 }
 
 const AILoader: React.FC<AILoaderProps> = ({ 
@@ -14,7 +15,8 @@ const AILoader: React.FC<AILoaderProps> = ({
   disabled = false, 
   onClick, 
   children, 
-  message = 'Generating IntelliSync AI Magic...' 
+  message = 'Generating IntelliSync AI Magic...',
+  loadingOnly = false
 }) => {
   const handleClick = async () => {
     if (onClick && !disabled) {
@@ -24,13 +26,15 @@ const AILoader: React.FC<AILoaderProps> = ({
 
   return (
     <>
-      <button 
-        onClick={handleClick}
-        disabled={disabled || isLoading}
-        className="w-full py-3 bg-primary text-primary-foreground rounded-lg font-medium shadow-medium hover:opacity-90 transition-all dark:shadow-[0_0_15px_rgba(0,0,0,0.2)] disabled:opacity-50 disabled:cursor-not-allowed"
-      >
-        {children}
-      </button>
+      {!loadingOnly && (
+        <button 
+          onClick={handleClick}
+          disabled={disabled || isLoading}
+          className="w-full py-3 bg-primary text-primary-foreground rounded-lg font-medium shadow-medium hover:opacity-90 transition-all dark:shadow-[0_0_15px_rgba(0,0,0,0.2)] disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {children}
+        </button>
+      )}
 
       {isLoading && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">

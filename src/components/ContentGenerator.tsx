@@ -51,7 +51,7 @@ const ContentGenerator: React.FC<ContentGeneratorProps> = ({ userPreferences }) 
     setGeneratedContent(null);
 
     try {
-      // Call the real API endpoint
+     
       const response = await fetch('/api/generatePost', {
         method: 'POST',
         headers: {
@@ -76,10 +76,22 @@ const ContentGenerator: React.FC<ContentGeneratorProps> = ({ userPreferences }) 
         throw new Error(data.error || 'Failed to generate content');
       }
       
-      setGeneratedContent(data.isThread ? JSON.stringify(data.content) : data.content);
+      // Check if the content is valid
+      if (!data.content) {
+        throw new Error('No content was generated. Please try again.');
+      }
+      
+      // Handle thread content (array of posts) vs regular content (string)
+      if (data.isThread && Array.isArray(data.content)) {
+        setGeneratedContent(JSON.stringify(data.content));
+      } else if (typeof data.content === 'string') {
+        setGeneratedContent(data.content);
+      } else {
+        throw new Error('Invalid content format received from server');
+      }
     } catch (error) {
       console.error('Error generating content:', error);
-      alert('Failed to generate content. Please try again.');
+      alert(error instanceof Error ? error.message : 'Failed to generate content. Please try again.');
     } finally {
       setIsLoading(false);
     }

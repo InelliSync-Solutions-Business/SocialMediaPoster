@@ -258,12 +258,19 @@ export const GeneratedContent: React.FC<GeneratedContentProps> = ({
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          prompt: imagePrompt
+          prompt: imagePrompt,
+          content: content || '',
+          style: 'professional',
+          format: 'social-media',
+          platform: activeTab.toLowerCase().replace('-form', '') as 'twitter' | 'linkedin' | 'facebook' | 'instagram',
+          model: 'dall-e-3' // Default to DALL-E 3 for better quality images
         }),
       });
 
       if (!response.ok) {
-        throw new Error(`Image generation failed with status ${response.status}`);
+        const errorData = await response.json().catch(() => ({}));
+        console.error('Image generation failed:', errorData);
+        throw new Error(errorData.error || `Image generation failed with status ${response.status}`);
       }
 
       const data = await response.json();
@@ -357,11 +364,18 @@ export const GeneratedContent: React.FC<GeneratedContentProps> = ({
         },
         body: JSON.stringify({
           prompt: `Create an image that visually represents the following social media thread: ${thread.content}`,
+          content: thread.content,
+          style: 'professional',
+          format: 'social-media',
+          platform: 'twitter',
+          model: 'dall-e-3' // Default to DALL-E 3 for better quality images
         })
       });
 
       if (!response.ok) {
-        throw new Error('Failed to generate image');
+        const errorData = await response.json().catch(() => ({}));
+        console.error('Image generation failed:', errorData);
+        throw new Error(errorData.error || `Image generation failed with status ${response.status}`);
       }
 
       const data = await response.json();
@@ -421,6 +435,30 @@ export const GeneratedContent: React.FC<GeneratedContentProps> = ({
   };
 
   const renderContent = () => {
+    // Handle case where content is not yet available
+    if (!dummyContent || dummyContent === "Your generated content will appear here. Fill out the form and click generate to create new content.") {
+      return (
+        <div className="w-full p-4 bg-white/5 rounded-lg border border-gray-200 dark:border-gray-700 text-muted-foreground">
+          <p>Your generated content will appear here. Fill out the form and click generate to create new content.</p>
+        </div>
+      );
+    }
+
+    // Check if content is an error message from the AI
+    if (dummyContent.includes("Could you please provide the details") || 
+        dummyContent.includes("missing") || 
+        dummyContent.startsWith("It seems like")) {
+      return (
+        <div className="w-full p-4 bg-white/5 rounded-lg border border-gray-200 dark:border-gray-700 text-foreground">
+          <div className="p-4 border border-yellow-300 bg-yellow-50 dark:bg-yellow-900/20 rounded-md text-yellow-800 dark:text-yellow-200">
+            <h3 className="font-medium mb-2">Additional Information Needed</h3>
+            <p>{dummyContent}</p>
+          </div>
+        </div>
+      );
+    }
+
+    // Normal content display
     const contentToRender = truncatedContent || dummyContent;
     const htmlFormattedContent = parseContentWithHTMLTags(contentToRender);
 

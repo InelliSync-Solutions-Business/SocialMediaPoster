@@ -10,11 +10,16 @@ import {
 } from '@/components/ui/tooltip';
 
 interface TokenUsageDisplayProps {
-  usage: TokenUsage;
+  usage: TokenUsage | undefined | null;
 }
 
 export const TokenUsageDisplay: React.FC<TokenUsageDisplayProps> = ({ usage }) => {
   if (!usage) return null;
+
+  // Ensure all properties exist and have default values if they don't
+  const inputTokens = usage.inputTokens || 0;
+  const outputTokens = usage.outputTokens || 0;
+  const estimatedCost = usage.estimatedCost || 0;
 
   return (
     <Card className="bg-muted/40 border-muted">
@@ -44,14 +49,14 @@ export const TokenUsageDisplay: React.FC<TokenUsageDisplayProps> = ({ usage }) =
             <div>
               <div className="flex justify-between mb-1">
                 <span>Input</span>
-                <span className="font-mono">{usage.inputTokens.toLocaleString()} tokens</span>
+                <span className="font-mono">{inputTokens.toLocaleString()} tokens</span>
               </div>
             </div>
             
             <div>
               <div className="flex justify-between mb-1">
                 <span>Output</span>
-                <span className="font-mono">{usage.outputTokens.toLocaleString()} tokens</span>
+                <span className="font-mono">{outputTokens.toLocaleString()} tokens</span>
               </div>
             </div>
           </div>
@@ -59,7 +64,7 @@ export const TokenUsageDisplay: React.FC<TokenUsageDisplayProps> = ({ usage }) =
           <div className="flex justify-between items-center pt-1">
             <span className="text-xs text-muted-foreground">Actual Cost</span>
             <span className="font-mono text-sm font-medium">
-              ${usage.estimatedCost.toFixed(6)}
+              ${estimatedCost.toFixed(6)}
             </span>
           </div>
         </div>

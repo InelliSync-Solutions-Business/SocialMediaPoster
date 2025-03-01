@@ -139,8 +139,18 @@ const Polls: React.FC = () => {
           disabled={isLoading}
           className="w-full py-2 px-4 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {isLoading ? <AILoader isLoading={true} /> : 'Generate Poll'}
+          {isLoading ? (
+            <div className="flex items-center justify-center">
+              <span className="mr-2">Generating...</span>
+              <div className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full" />
+            </div>
+          ) : (
+            'Generate Poll'
+          )}
         </button>
+
+        {/* Render the AILoader component separately */}
+        {isLoading && <AILoader isLoading={true} loadingOnly={true} />}
 
         {generatedPoll && (
           <div className="mt-8 p-4 bg-white dark:bg-secondary/20 rounded-lg border border-border/50 shadow-lifted dark:shadow-dark-lifted">
