@@ -1,12 +1,20 @@
 import { UserPreferences } from '@/types/preferences';
 import CONTENT_PROMPTS from './contentPrompts';
-import { generatePollPrompt, PollPromptParams } from './pollsPrompt';
-import { generateImagePrompt as imagePromptGenerator } from './imagePrompt';
 import { generateLongFormPrompt } from './longFormPrompt';
 import { generateShortFormPrompt } from './shortFormPrompt';
 import { OpenAI } from 'openai';
-import { AIModel } from '@/pages/newsletter/types/newsletter';
-import { AI_MODELS, estimateTokenCount, calculateCost } from '@/utils/ai/modelInfo';
+
+// Import builders
+import { 
+  PollPromptBuilder,
+  ImagePromptBuilder
+} from './builders';
+
+// Import centralized utilities
+import { estimateTokenCount, calculatePromptCost, getOpenAIModel } from '../ai/tokenUtils';
+import { parseThreadContent as parseThread, fillTemplate } from './contentProcessors';
+import { mapStyleToTone } from './styleMapper';
+import { SYSTEM_PROMPTS } from './templates';
 
 // Helper function to build standard post prompt
 export function buildStandardPostPrompt({ postType, topic, audience, style, guidelines }: {
@@ -202,14 +210,15 @@ export async function generateNewsletter(params: {
     // Build the prompt
     const prompt = buildNewsletterPrompt(params);
     
-    // Estimate tokens and cost
+    // Estimate tokens and cost using centralized utilities
     const inputTokens = estimateTokenCount(prompt);
     const estimatedOutputTokens = 
       params.length === 'short' ? 2000 :
       params.length === 'medium' ? 4000 : 6000;
     
     const model = getOpenAIModel(params.model);
-    const estimatedCost = calculateCost(model as AIModel, inputTokens, estimatedOutputTokens);
+    const systemPrompt = SYSTEM_PROMPTS.newsletter;
+    const estimatedCost = calculatePromptCost(systemPrompt, prompt, estimatedOutputTokens, model);
     
     console.log(`Estimated tokens - Input: ${inputTokens}, Output: ${estimatedOutputTokens}`);
     console.log(`Estimated cost: $${estimatedCost.toFixed(6)}`);
@@ -225,7 +234,7 @@ export async function generateNewsletter(params: {
       messages: [
         {
           role: 'system',
-          content: 'You are a professional content writer specializing in newsletters. Create well-structured, engaging content with proper markdown formatting.'
+          content: SYSTEM_PROMPTS.newsletter
         },
         {
           role: 'user',
@@ -239,10 +248,12 @@ export async function generateNewsletter(params: {
     // Extract and return the generated content
     const content = response.choices[0]?.message?.content || '';
     
-    // Log actual token usage
+    // Log actual token usage using centralized utilities
     const actualInputTokens = response.usage?.prompt_tokens || 0;
     const actualOutputTokens = response.usage?.completion_tokens || 0;
-    const actualCost = calculateCost(model as AIModel, actualInputTokens, actualOutputTokens);
+    
+    // Calculate actual cost using the token usage
+    const actualCost = calculatePromptCost(systemPrompt, prompt, actualOutputTokens, model);
     
     console.log(`Actual tokens - Input: ${actualInputTokens}, Output: ${actualOutputTokens}`);
     console.log(`Actual cost: $${actualCost.toFixed(6)}`);
@@ -261,31 +272,55 @@ export async function generateNewsletter(params: {
   }
 }
 
-// Helper function to get valid OpenAI model name
-const getOpenAIModel = (modelPreference?: string): string => {
-  // If the model exists in our AI_MODELS object, return its ID
-  if (modelPreference && Object.keys(AI_MODELS).includes(modelPreference as AIModel)) {
-    return modelPreference;
-  }
-  
-  // Default to gpt-4o-mini
-  return 'gpt-4o-mini';
-};
+// Use the centralized getOpenAIModel function from tokenUtils.ts
+// This comment is kept to maintain code documentation
 
 // Helper function to parse thread content
 export function parseThreadContent(content: string) {
   if (!content) return [];
-  const tweets = content.split('---').map(tweet => tweet.trim());
+  
+  // Use the centralized parseThread function
+  const tweets = parseThread(content);
+  
+  // Format the result to maintain the same return structure
   return tweets.filter(tweet => tweet.length > 0).map(tweet => ({
     content: tweet,
     characterCount: tweet.length
   }));
 }
 
+// Export builder-based prompt generation functions
+export function generatePollPrompt(params: any) {
+  const builder = new PollPromptBuilder();
+  return builder.build({
+    topic: params.topic,
+    targetAudience: params.audience,
+    tone: params.tone,
+    writingStyle: params.style,
+    additionalGuidelines: params.guidelines,
+    platform: params.platform,
+    optionCount: params.optionCount
+  });
+}
+
+export function generateImagePrompt(params: any) {
+  const builder = new ImagePromptBuilder();
+  return builder.build({
+    topic: params.topic,
+    targetAudience: params.audience,
+    tone: params.tone,
+    writingStyle: params.writingStyle || params.style,
+    additionalGuidelines: params.guidelines,
+    style: params.style, // Use the style parameter directly as ImagePromptBuilder expects
+    mood: params.mood,
+    visualElements: params.visualElements,
+    aspectRatio: params.aspectRatio,
+    content: params.content // Add content parameter
+  });
+}
+
 // Re-export other prompt functions for consistency
-export { 
-  generatePollPrompt,
-  imagePromptGenerator as generateImagePrompt,
+export {
   generateLongFormPrompt,
   generateShortFormPrompt
 };
@@ -298,7 +333,7 @@ export default {
   buildNewsletterPrompt,
   parseThreadContent,
   generatePollPrompt,
-  generateImagePrompt: imagePromptGenerator,
+  generateImagePrompt,
   generateLongFormPrompt,
   generateShortFormPrompt,
   generateNewsletter

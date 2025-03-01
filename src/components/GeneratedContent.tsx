@@ -21,7 +21,7 @@ import { Tooltip } from '@mui/material';
 import { ThreadList } from './threads/ThreadList';
 import { ThreadPostProps } from './threads/ThreadPost';
 import { UserPreferences, PlatformFormats } from '../types/preferences';
-import { generateImagePrompt } from '@/utils/prompts/imagePrompt';
+import { generateImagePrompt } from '@/utils/prompts/promptManager';
 import { formatContentForPlatform } from '@/utils/platformFormatters';
 import { parseContentWithHTMLTags, formatThreadedPost, parseThreads } from '@/utils/textFormatters';
 
@@ -242,12 +242,19 @@ export const GeneratedContent: React.FC<GeneratedContentProps> = ({
 
     try {
       // Generate an image prompt based on the content
-      const imagePrompt = generateImagePrompt({
+      const imagePromptParams = {
         content: content || '',
-        style: 'professional',
+        style: preferences?.platforms?.instagram?.style || 'realistic',
         format: 'social-media',
-        platform: activeTab.toLowerCase().replace('-form', '') as 'twitter' | 'linkedin' | 'facebook' | 'instagram'
-      }, preferences);
+        platform: activeTab.toLowerCase().replace('-form', '') as 'twitter' | 'linkedin' | 'facebook' | 'instagram',
+        topic: content?.substring(0, 100) || '',
+        audience: preferences?.targetAudience || 'general audience',
+        mood: 'neutral',
+        aspectRatio: preferences?.platforms?.instagram?.imageFormat || '1:1'
+      };
+      
+      // Get the string prompt from the prompt builder
+      const imagePrompt = generateImagePrompt(imagePromptParams);
 
       console.log('Generated image prompt:', imagePrompt);
 
@@ -258,7 +265,7 @@ export const GeneratedContent: React.FC<GeneratedContentProps> = ({
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          prompt: imagePrompt,
+          prompt: typeof imagePrompt === 'string' ? imagePrompt : JSON.stringify(imagePrompt),
           content: content || '',
           style: 'professional',
           format: 'social-media',
@@ -423,10 +430,11 @@ export const GeneratedContent: React.FC<GeneratedContentProps> = ({
               ...children.props.style, 
               pointerEvents: 'none', 
               opacity: 0.5 
-            } 
+            },
+            disabled: true
           })}
         </span>
-    </Tooltip>
+      </Tooltip>
     ) : (
       <Tooltip title={title}>
         {children}

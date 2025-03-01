@@ -300,8 +300,20 @@ export const NewsletterPreview: React.FC<NewsletterPreviewProps> = ({
                   dangerouslySetInnerHTML={{ __html: content.replace(/\n/g, '<br>') }}
                 />
               ) : (
-                <div className="prose prose-sm max-w-none">
-                  <ReactMarkdown>{content}</ReactMarkdown>
+                <div className="prose prose-sm max-w-none text-left">
+                  <ReactMarkdown components={{
+                    p: ({ children }) => <p className="text-left">{children}</p>,
+                    h1: ({ children }) => <h1 className="text-left">{children}</h1>,
+                    h2: ({ children }) => <h2 className="text-left">{children}</h2>,
+                    h3: ({ children }) => <h3 className="text-left">{children}</h3>,
+                    h4: ({ children }) => <h4 className="text-left">{children}</h4>,
+                    h5: ({ children }) => <h5 className="text-left">{children}</h5>,
+                    h6: ({ children }) => <h6 className="text-left">{children}</h6>,
+                    ul: ({ children }) => <ul className="text-left">{children}</ul>,
+                    ol: ({ children }) => <ol className="text-left">{children}</ol>,
+                    li: ({ children }) => <li className="text-left">{children}</li>,
+                    blockquote: ({ children }) => <blockquote className="text-left">{children}</blockquote>,
+                  }}>{content}</ReactMarkdown>
                 </div>
               )}
             </TabsContent>

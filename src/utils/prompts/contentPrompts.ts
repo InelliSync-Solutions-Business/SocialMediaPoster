@@ -1,3 +1,8 @@
+/**
+ * @deprecated This module is deprecated. Please use the prompt builders from './builders' and system prompts from './templates' instead.
+ * This file is maintained for backward compatibility and will be removed in a future version.
+ */
+
 // Content prompts for different types of content generation
 
 interface NewsletterPrompts {

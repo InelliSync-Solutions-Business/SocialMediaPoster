@@ -179,5 +179,17 @@ export default {
       },
     },
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [
+    require("tailwindcss-animate"),
+    require("@tailwindcss/typography")({ 
+      // Configure typography plugin to use left alignment by default
+      className: 'prose', 
+      target: 'legacy',
+      defaultValue: {
+        css: {
+          textAlign: 'left',
+        },
+      },
+    }),
+  ],
 }

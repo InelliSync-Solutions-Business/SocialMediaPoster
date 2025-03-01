@@ -3,6 +3,8 @@ import { NewsletterForm } from './components/NewsletterForm';
 import { NewsletterPreview } from './components/NewsletterPreview';
 import { useNewsletter } from './hooks/useNewsletter';
 import { Sparkles, MailOpen } from 'lucide-react';
+import { MainLayout } from '@/components/layout/MainLayout';
+import { Section, ResponsiveContainer } from '@/components/ui/responsive-container';
 
 export const NewsletterPage: React.FC = () => {
   const {
@@ -18,47 +20,51 @@ export const NewsletterPage: React.FC = () => {
   } = useNewsletter();
 
   return (
-    <div className="container mx-auto p-4 sm:p-6 lg:p-8 xl:p-10">
-      <div className="mb-6 md:mb-8 text-center">
-        <div className="inline-flex items-center justify-center gap-2 mb-3">
-          <div className="bg-primary/10 p-2 rounded-full">
-            <MailOpen className="h-5 w-5 md:h-6 md:w-6 text-primary" />
+    <MainLayout>
+      <Section
+        title={
+          <div className="flex items-center justify-center gap-2">
+            <div className="bg-primary/10 p-2 rounded-full">
+              <MailOpen className="h-5 w-5 md:h-6 md:w-6 text-primary" />
+            </div>
+            <span className="gradient-text">Newsletter Generator</span>
+            <div className="bg-primary/10 p-2 rounded-full">
+              <Sparkles className="h-5 w-5 md:h-6 md:w-6 text-primary" />
+            </div>
           </div>
-          <h1 className="text-3xl md:text-4xl xl:text-5xl font-bold gradient-text">Newsletter Generator</h1>
-          <div className="bg-primary/10 p-2 rounded-full">
-            <Sparkles className="h-5 w-5 md:h-6 md:w-6 text-primary" />
-          </div>
-        </div>
-        <p className="text-foreground/80 max-w-2xl mx-auto text-sm md:text-base xl:text-lg">
-          Create engaging, professional newsletters with AI-powered content generation. 
-          Customize your newsletter's tone, style, and content to perfectly match your brand.
-        </p>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-12 gap-6 md:gap-8 relative">
-        <div className="space-y-6 xl:col-span-5">
+        }
+        description="Create engaging, professional newsletters with AI-powered content generation. Customize your newsletter's tone, style, and content to perfectly match your brand."
+        className="text-center mb-6"
+      >
+        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-12 gap-4 md:gap-6 relative">
+        <div className="space-y-4 xl:col-span-5">
           <div className="sticky top-6">
-            <NewsletterForm 
-              onSubmit={handleSubmit}
-              isLoading={isLoading}
-              error={error}
-            />
+            <ResponsiveContainer>
+              <NewsletterForm 
+                onSubmit={handleSubmit}
+                isLoading={isLoading}
+                error={error}
+              />
+            </ResponsiveContainer>
           </div>
         </div>
 
-        <div className="space-y-6 xl:col-span-7">
-          <NewsletterPreview 
-            newsletter={newsletter}
-            generatedContent={generatedContent}
-            isLoading={isLoading}
-            onRegenerate={regenerateNewsletter}
-            onClear={clearNewsletter}
-            onUpdateContent={updateContent}
-            streamingState={streamingState}
-          />
+        <div className="space-y-4 xl:col-span-7">
+          <ResponsiveContainer>
+            <NewsletterPreview 
+              newsletter={newsletter}
+              generatedContent={generatedContent}
+              isLoading={isLoading}
+              onRegenerate={regenerateNewsletter}
+              onClear={clearNewsletter}
+              onUpdateContent={updateContent}
+              streamingState={streamingState}
+            />
+          </ResponsiveContainer>
         </div>
       </div>
-    </div>
+      </Section>
+    </MainLayout>
   );
 };
 

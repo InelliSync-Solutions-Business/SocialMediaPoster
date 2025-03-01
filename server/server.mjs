@@ -8,7 +8,8 @@ import {
   buildPollPrompt, 
   parseThreadContent,
   buildNewsletterPrompt,
-  generateImagePrompt
+  generateImagePrompt,
+  systemPrompts
 } from './promptAdapter.mjs';
 
 dotenv.config();
@@ -102,31 +103,7 @@ app.post('/api/generatePost', async (req, res) => {
       messages: [
         {
           role: 'system',
-          content: `You are an AI-powered social media content generation assistant for Intellisync Solutions, specializing in creating engaging, platform-optimized content across multiple social media channels.
-
-Core Objectives:
-- Generate high-quality, contextually relevant social media content
-- Adapt tone and style based on user-specified preferences
-- Ensure content is platform-specific and meets each platform's best practices
-
-Platform Considerations:
-- Twitter: Craft concise, impactful messages under 280 characters
-- LinkedIn: Maintain a professional tone
-- Facebook: Balance informative and conversational styles
-- Instagram: Consider visual appeal and hashtag suggestions
-
-Tone Flexibility:
-Adjust content tone to match user preference:
-- Professional: Formal, authoritative, industry-focused
-- Casual: Conversational, relatable, approachable
-- Inspirational: Motivational, uplifting, encouraging
-- Humorous: Witty, light-hearted, entertaining
-
-Technical Guidelines:
-- For threads: Separate each tweet with "---"
-- Keep tweets under 280 characters
-- Use emojis appropriately
-- Include calls-to-action`
+          content: systemPrompts.social
         },
         {
           role: 'user',
@@ -313,10 +290,7 @@ app.post('/api/generate-poll', async (req, res) => {
       messages: [
         {
           role: 'system',
-          content: `You are a professional content writer specializing in newsletters. Create well-structured, engaging content with proper markdown formatting.
-
-Format your response in proper markdown with headings (using # syntax), lists (using - or * syntax), emphasis (**bold** or *italic*), and other markdown elements as appropriate.
-Always include a clear structure with a title, date placeholder, introduction, well-organized sections, and a conclusion.`
+          content: systemPrompts.poll
         },
         {
           role: 'user',
@@ -445,7 +419,7 @@ app.get('/api/generate-newsletter', async (req, res) => {
     });
 
     // Generate the prompt
-    const prompt = buildNewsletterPrompt(
+    const promptData = buildNewsletterPrompt(
       type,
       topic,
       writingStyle,
@@ -454,6 +428,9 @@ app.get('/api/generate-newsletter', async (req, res) => {
       length,
       tone
     );
+
+    // Extract the prompt and systemPrompt from the returned object
+    const { prompt, systemPrompt, maxTokens } = promptData;
 
     console.log('Generated prompt:', prompt);
 
@@ -475,7 +452,7 @@ app.get('/api/generate-newsletter', async (req, res) => {
       messages: [
         {
           role: 'system',
-          content: `You are a professional content writer specializing in newsletters. Create well-structured, engaging content with proper markdown formatting.\n\nFormat your response in proper markdown with headings (using # syntax), lists (using - or * syntax), emphasis (**bold** or *italic*), and other markdown elements as appropriate.\nAlways include a clear structure with a title, date placeholder, introduction, well-organized sections, and a conclusion.`
+          content: systemPrompt || systemPrompts.newsletter
         },
         {
           role: 'user',
@@ -483,7 +460,7 @@ app.get('/api/generate-newsletter', async (req, res) => {
         }
       ],
       temperature: 0.7,
-      max_tokens: length === 'short' ? 1500 : length === 'medium' ? 2500 : 3500,
+      max_tokens: maxTokens || (length === 'short' ? 1500 : length === 'medium' ? 2500 : 3500),
       stream: true
     });
     
@@ -503,7 +480,7 @@ app.get('/api/generate-newsletter', async (req, res) => {
     }
     
     // Estimate input tokens (rough calculation)
-    inputTokens = prompt.length / 4;
+    inputTokens = (typeof prompt === 'string' ? prompt.length : JSON.stringify(prompt).length) / 4;
     
     // Send final message with usage statistics
     res.write(`data: ${JSON.stringify({ 
@@ -559,7 +536,7 @@ app.post('/api/generate-newsletter', async (req, res) => {
     });
     
     // Generate the prompt using the updated function
-    const prompt = buildNewsletterPrompt(
+    const promptData = buildNewsletterPrompt(
       type,
       topic,
       writingStyle,
@@ -568,6 +545,9 @@ app.post('/api/generate-newsletter', async (req, res) => {
       length,
       tone
     );
+
+    // Extract the prompt and systemPrompt from the returned object
+    const { prompt, systemPrompt, maxTokens } = promptData;
 
     console.log('Generated prompt:', prompt);
     
@@ -589,10 +569,7 @@ app.post('/api/generate-newsletter', async (req, res) => {
       messages: [
         {
           role: 'system',
-          content: `You are a professional content writer specializing in newsletters. Create well-structured, engaging content with proper markdown formatting.
-
-Format your response in proper markdown with headings (using # syntax), lists (using - or * syntax), emphasis (**bold** or *italic*), and other markdown elements as appropriate.
-Always include a clear structure with a title, date placeholder, introduction, well-organized sections, and a conclusion.`
+          content: systemPrompt || systemPrompts.newsletter
         },
         {
           role: 'user',
@@ -600,7 +577,7 @@ Always include a clear structure with a title, date placeholder, introduction, w
         }
       ],
       temperature: 0.7,
-      max_tokens: length === 'short' ? 1500 : length === 'medium' ? 2500 : 3500,
+      max_tokens: maxTokens || (length === 'short' ? 1500 : length === 'medium' ? 2500 : 3500),
       stream: true
     });
     
@@ -620,7 +597,7 @@ Always include a clear structure with a title, date placeholder, introduction, w
     }
     
     // Estimate input tokens (rough calculation)
-    inputTokens = prompt.length / 4;
+    inputTokens = (typeof prompt === 'string' ? prompt.length : JSON.stringify(prompt).length) / 4;
     
     // Send final message with usage statistics
     res.write(`data: ${JSON.stringify({ 

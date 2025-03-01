@@ -63,7 +63,7 @@ export const TokenEstimator: React.FC<TokenEstimatorProps> = ({
     if (percentage > 90) return "bg-red-500";
     if (percentage > 70) return "bg-amber-500";
     if (percentage > 50) return "bg-yellow-500";
-    return "";
+    return "bg-primary";
   };
   
   return (

@@ -1,3 +1,11 @@
+/**
+ * @deprecated This module is deprecated. Please use the SYSTEM_PROMPTS from './templates' instead.
+ * This file is maintained for backward compatibility and will be removed in a future version.
+ */
+
+import { SYSTEM_PROMPTS } from './templates';
+
+// Legacy system prompt - maintained for backward compatibility
 export const SYSTEM_PROMPT = `You are NOVA, IntelliSync Solutions' AI content assistant.
 
 Your core identity:

@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Routes, Route, useNavigate, Navigate } from 'react-router-dom';
+import { Routes, Route, useNavigate, Navigate, useLocation } from 'react-router-dom';
 import { HelmetProvider, Helmet } from 'react-helmet-async';
 import { ThemeProvider } from '@emotion/react';
 import { CssBaseline } from '@mui/material';
 import { lightTheme, darkTheme } from './theme';
 import { MainLayout } from './components/layout/MainLayout';
-import Header from './components/Header';
+
 import Sidebar from './components/Sidebar';
 import ContentGenerator from './components/ContentGenerator';
 import Dashboard from './components/Dashboard';
@@ -22,6 +22,8 @@ import PricingPage from './pages/PricingPage';
 import NewsletterPage from './pages/newsletter/NewsletterPage';
 import Polls from './components/Polls';
 import { Toaster } from 'sonner';
+import { ResponsiveContainer, Section } from './components/ui/responsive-container';
+import { useScrollToTop } from './hooks/useScrollToTop';
 
 interface Template {
   id: string;
@@ -46,6 +48,9 @@ export interface GenerateParams {
 }
 
 function App() {
+  // Custom hook to scroll to top on route change
+  useScrollToTop();
+  
   const [isDark, setIsDark] = useState(false);
   const [isPreferencesOpen, setIsPreferencesOpen] = useState(false);
   const [currentView, setCurrentView] = useState<string>('general');
@@ -184,6 +189,7 @@ function App() {
   });
   const [errors, setErrors] = useState<string[]>([]);
   const navigate = useNavigate();
+  const location = useLocation();
 
   // Handle opening preferences dialog
   const handleOpenPreferences = () => {
@@ -217,6 +223,20 @@ function App() {
       document.documentElement.classList.add('light')
     }
   }, [isDark])
+
+  // Effect to force refresh on browser back button navigation
+  useEffect(() => {
+    // Force a re-render when location changes to ensure content is refreshed
+    const handlePopState = () => {
+      // Force a re-render
+      setErrors([...errors]);
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, [location, errors])
 
   const routes = [
     { path: '/', label: 'Home' },
@@ -269,19 +289,16 @@ function App() {
               element={
                 <MainLayout>
                   <div className="flex h-screen overflow-hidden">
-                    {/* Sidebar */}
-                    <Sidebar className="hidden md:block" />
+                    {/* Sidebar with theme toggle */}
+                    <Sidebar 
+                      className="hidden md:block" 
+                      isDark={isDark} 
+                      toggleDarkMode={() => setIsDark(!isDark)} 
+                    />
                     
                     <div className="flex flex-col flex-1 overflow-hidden">
-                      {/* Header */}
-                      <Header 
-                        isDark={isDark} 
-                        toggleDarkMode={() => setIsDark(!isDark)} 
-                        openPreferences={handleOpenPreferences} 
-                      />
-                      
                       {/* Main Content */}
-                      <div className="flex-1 overflow-auto p-4">
+                      <div className="flex-1 overflow-auto">
                         <Routes>
                           <Route path="/" element={<Dashboard />} />
                           <Route path="/dashboard" element={<Dashboard />} />
@@ -304,7 +321,7 @@ function App() {
                         </Routes>
                       </div>
                       
-                      <Footer className="mt-auto" />
+                      <Footer className="sticky bottom-0 z-10" />
                     </div>
                   </div>
 

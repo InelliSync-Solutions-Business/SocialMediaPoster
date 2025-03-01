@@ -1,170 +1,116 @@
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { FileText, MessageSquare, Instagram, Linkedin, Twitter, Facebook } from 'lucide-react';
+import { PenTool, Calendar, BarChart2, Mail, FileText, Settings, HelpCircle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
-const Dashboard: React.FC = () => {
-  // Sample data for charts
-  const contentData = [
-    { name: 'Jan', posts: 4 },
-    { name: 'Feb', posts: 7 },
-    { name: 'Mar', posts: 5 },
-    { name: 'Apr', posts: 10 },
-    { name: 'May', posts: 8 },
-    { name: 'Jun', posts: 12 },
+interface DashboardProps {
+  className?: string;
+}
+
+const Dashboard: React.FC<DashboardProps> = ({ className }) => {
+  // Main app features
+  const features = [
+    { 
+      title: 'Content Generator', 
+      description: 'Create AI-powered content for social media', 
+      icon: PenTool, 
+      path: '/app/generator',
+      primary: true
+    },
+    { 
+      title: 'Newsletter', 
+      description: 'Build and send newsletters', 
+      icon: Mail, 
+      path: '/app/newsletter' 
+    },
+    { 
+      title: 'Templates', 
+      description: 'Use pre-made content templates', 
+      icon: FileText, 
+      path: '/app/templates' 
+    },
+    { 
+      title: 'Analytics', 
+      description: 'Track content performance', 
+      icon: BarChart2, 
+      path: '/app/analytics' 
+    },
+    { 
+      title: 'Calendar', 
+      description: 'Schedule and plan content', 
+      icon: Calendar, 
+      path: '/app/calendar' 
+    },
+    { 
+      title: 'Settings', 
+      description: 'Configure your preferences', 
+      icon: Settings, 
+      path: '/app/settings' 
+    },
   ];
-
-  const platformData = [
-    { name: 'Twitter', value: 35, color: '#1DA1F2' },
-    { name: 'LinkedIn', value: 25, color: '#0A66C2' },
-    { name: 'Instagram', value: 20, color: '#E1306C' },
-    { name: 'Facebook', value: 15, color: '#1877F2' },
-    { name: 'Other', value: 5, color: '#6c757d' },
-  ];
-
-  const contentTypeData = [
-    { name: 'Short-form', value: 45, icon: FileText },
-    { name: 'Long-form', value: 30, icon: FileText },
-    { name: 'Threads', value: 15, icon: MessageSquare },
-    { name: 'Polls', value: 10, icon: FileText },
-  ];
-
-  const recentPosts = [
-    { id: 1, platform: 'Twitter', content: 'Exciting news! We just launched our new product...', date: '2 hours ago', engagement: 124 },
-    { id: 2, platform: 'LinkedIn', content: "We're thrilled to announce our latest partnership with...", date: '1 day ago', engagement: 87 },
-    { id: 3, platform: 'Instagram', content: 'Check out our behind-the-scenes look at our team retreat!', date: '3 days ago', engagement: 203 },
-  ];
-
-  const getPlatformIcon = (platform: string) => {
-    switch (platform.toLowerCase()) {
-      case 'twitter':
-        return <Twitter className="h-4 w-4 text-[#1DA1F2]" />;
-      case 'linkedin':
-        return <Linkedin className="h-4 w-4 text-[#0A66C2]" />;
-      case 'instagram':
-        return <Instagram className="h-4 w-4 text-[#E1306C]" />;
-      case 'facebook':
-        return <Facebook className="h-4 w-4 text-[#1877F2]" />;
-      default:
-        return <FileText className="h-4 w-4" />;
-    }
-  };
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-3xl font-bold">Dashboard</h1>
-      
-      {/* Overview Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Total Posts</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">46</div>
-            <p className="text-xs text-muted-foreground">+12% from last month</p>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Engagement Rate</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">3.2%</div>
-            <p className="text-xs text-muted-foreground">+0.4% from last month</p>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Top Platform</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold flex items-center">
-              <Twitter className="h-5 w-5 mr-2 text-[#1DA1F2]" />
-              Twitter
-            </div>
-            <p className="text-xs text-muted-foreground">35% of total content</p>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Content Generated</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">12.4k</div>
-            <p className="text-xs text-muted-foreground">+18% from last month</p>
-          </CardContent>
-        </Card>
+    <div className={`p-4 md:p-6 ${className}`}>
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold mb-2">Dashboard</h1>
+        <p className="text-muted-foreground">Welcome to IntelliSync Solutions</p>
       </div>
-      
-      {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card className="col-span-1">
-          <CardHeader>
-            <CardTitle>Content Production</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-80">
-              <div className="text-lg font-medium text-center">Chart Coming Soon!</div>
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card className="col-span-1">
-          <CardHeader>
-            <CardTitle>Content Distribution</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Tabs defaultValue="platform">
-              <TabsList className="mb-4">
-                <TabsTrigger value="platform">By Platform</TabsTrigger>
-                <TabsTrigger value="type">By Type</TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="platform">
-                <div className="h-72">
-                  <div className="text-lg font-medium text-center">Chart Coming Soon!</div>
-                </div>
-              </TabsContent>
-              
-              <TabsContent value="type">
-                <div className="h-72">
-                  <div className="text-lg font-medium text-center">Chart Coming Soon!</div>
-                </div>
-              </TabsContent>
-            </Tabs>
-          </CardContent>
-        </Card>
-      </div>
-      
-      {/* Recent Posts */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Recent Posts</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {recentPosts.map(post => (
-              <div key={post.id} className="flex items-start p-3 rounded-lg border border-border/40">
-                <div className="mr-3 mt-1">
-                  {getPlatformIcon(post.platform)}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium truncate">{post.content}</p>
-                  <div className="flex items-center mt-1 text-xs text-muted-foreground">
-                    <span>{post.date}</span>
-                    <span className="mx-2">•</span>
-                    <span>{post.engagement} engagements</span>
+
+      {/* Quick access section */}
+      <div className="mb-8">
+        <h2 className="text-xl font-semibold mb-4">Quick Access</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {features.map((feature, index) => (
+            <Card key={index} className="transition-all hover:shadow-md hover:border-primary/20">
+              <CardHeader className="pb-2">
+                <div className="flex items-start justify-between">
+                  <div className="bg-primary/10 p-2 rounded-md">
+                    <feature.icon className="h-5 w-5 text-primary" />
                   </div>
                 </div>
+              </CardHeader>
+              <CardContent>
+                <CardTitle className="text-lg mb-1">{feature.title}</CardTitle>
+                <CardDescription className="mb-4">{feature.description}</CardDescription>
+                <Button 
+                  variant={feature.primary ? "default" : "outline"}
+                  className="w-full"
+                  onClick={() => window.location.href = feature.path}
+                >
+                  {feature.primary ? 'Create Now' : 'Open'}
+                </Button>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+
+      {/* Help section */}
+      <div className="mt-8">
+        <Card className="bg-muted/50">
+          <CardContent className="pt-6">
+            <div className="flex items-start space-x-4">
+              <div className="bg-primary/10 p-2 rounded-full">
+                <HelpCircle className="h-5 w-5 text-primary" />
               </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+              <div>
+                <h3 className="font-medium mb-1">Need help getting started?</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Check out our quick start guide or contact support for assistance.
+                </p>
+                <div className="flex space-x-2">
+                  <Button variant="outline" size="sm">
+                    View Guide
+                  </Button>
+                  <Button variant="ghost" size="sm">
+                    Contact Support
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };

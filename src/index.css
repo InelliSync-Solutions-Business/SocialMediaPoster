@@ -230,6 +230,11 @@
   }
 }
 
+/* Newsletter styles */
+.prose * {
+  text-align: left !important;
+}
+
 /* Additional global styles */
 @layer utilities {
   /* Scrollbar styling */
