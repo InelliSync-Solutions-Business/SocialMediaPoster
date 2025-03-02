@@ -18,7 +18,17 @@ export type ToneType =
   | 'inspirational' 
   | 'humorous' 
   | 'analytical' 
-  | 'conversational';
+  | 'conversational'
+  | 'technical'
+  | 'engaging'
+  | 'authoritative'
+  | 'storytelling'
+  | 'persuasive'
+  | 'insightful'
+  | 'visionary'
+  | 'educational'
+  | 'empathetic'
+  | 'controversial';
 
 /**
  * Basic content length options

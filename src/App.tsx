@@ -5,6 +5,7 @@ import { ThemeProvider } from '@emotion/react';
 import { CssBaseline } from '@mui/material';
 import { lightTheme, darkTheme } from './theme';
 import { MainLayout } from './components/layout/MainLayout';
+import { PageTransition } from './components/PageTransition';
 
 import Sidebar from './components/Sidebar';
 import ContentGenerator from './components/ContentGenerator';
@@ -272,70 +273,72 @@ function App() {
           <meta name="description" content="AI-powered social media content generator" />
         </Helmet>
         <div className={`app-container ${isDark ? 'dark-mode' : 'light-mode'}`}>
-          <Routes>
-            <Route path="/" element={<LandingPage />} />
-            <Route path="/pricing" element={<PricingPage />} />
-            <Route path="/settings" element={<Navigate to="/app/settings" replace />} />
-            <Route path="/generator" element={<Navigate to="/app/generator" replace />} />
-            <Route path="/templates" element={<Navigate to="/app/templates" replace />} />
-            <Route path="/dashboard" element={<Navigate to="/app/dashboard" replace />} />
-            <Route path="/analytics" element={<Navigate to="/app/analytics" replace />} />
-            <Route path="/history" element={<Navigate to="/app/history" replace />} />
-            <Route path="/help" element={<Navigate to="/app/help" replace />} />
-            <Route path="/newsletter" element={<Navigate to="/app/newsletter" replace />} />
-            <Route path="/polls" element={<Navigate to="/app/polls" replace />} />
-            <Route
-              path="/app/*"
-              element={
-                <MainLayout>
-                  <div className="flex h-screen overflow-hidden">
-                    {/* Sidebar with theme toggle */}
-                    <Sidebar 
-                      className="hidden md:block" 
-                      isDark={isDark} 
-                      toggleDarkMode={() => setIsDark(!isDark)} 
-                    />
-                    
-                    <div className="flex flex-col flex-1 overflow-hidden">
-                      {/* Main Content */}
-                      <div className="flex-1 overflow-auto">
-                        <Routes>
-                          <Route path="/" element={<Dashboard />} />
-                          <Route path="/dashboard" element={<Dashboard />} />
-                          <Route path="/generator" element={<ContentGenerator userPreferences={userPreferences} />} />
-                          <Route path="/templates" element={<Templates 
-                            onTemplateSelect={handleTemplateSelect}
-                            onNavigateToGenerator={() => navigate('/app/generator')}
-                          />} />
-                          <Route path="/analytics" element={<Analytics />} />
-                          <Route path="/history" element={<History />} />
-                          <Route path="/settings" element={
-                            <SettingsComponent 
-                              userPreferences={userPreferences} 
-                              onUpdatePreferences={handleSavePreferences} 
-                            />
-                          } />
-                          <Route path="/help" element={<Help />} />
-                          <Route path="/newsletter" element={<NewsletterPage />} />
-                          <Route path="/polls" element={<Polls />} />
-                        </Routes>
-                      </div>
+          <PageTransition>
+            <Routes>
+              <Route path="/" element={<LandingPage />} />
+              <Route path="/pricing" element={<PricingPage />} />
+              <Route path="/settings" element={<Navigate to="/app/settings" replace />} />
+              <Route path="/generator" element={<Navigate to="/app/generator" replace />} />
+              <Route path="/templates" element={<Navigate to="/app/templates" replace />} />
+              <Route path="/dashboard" element={<Navigate to="/app/dashboard" replace />} />
+              <Route path="/analytics" element={<Navigate to="/app/analytics" replace />} />
+              <Route path="/history" element={<Navigate to="/app/history" replace />} />
+              <Route path="/help" element={<Navigate to="/app/help" replace />} />
+              <Route path="/newsletter" element={<Navigate to="/app/newsletter" replace />} />
+              <Route path="/polls" element={<Navigate to="/app/polls" replace />} />
+              <Route
+                path="/app/*"
+                element={
+                  <MainLayout>
+                    <div className="flex h-screen overflow-hidden">
+                      {/* Sidebar with theme toggle */}
+                      <Sidebar 
+                        className="hidden md:block" 
+                        isDark={isDark} 
+                        toggleDarkMode={() => setIsDark(!isDark)} 
+                      />
                       
-                      <Footer className="sticky bottom-0 z-10" />
+                      <div className="flex flex-col flex-1 overflow-hidden">
+                        {/* Main Content */}
+                        <div className="flex-1 overflow-auto">
+                          <Routes>
+                            <Route path="/" element={<Dashboard />} />
+                            <Route path="/dashboard" element={<Dashboard />} />
+                            <Route path="/generator" element={<ContentGenerator userPreferences={userPreferences} />} />
+                            <Route path="/templates" element={<Templates 
+                              onTemplateSelect={handleTemplateSelect}
+                              onNavigateToGenerator={() => navigate('/app/generator')}
+                            />} />
+                            <Route path="/analytics" element={<Analytics />} />
+                            <Route path="/history" element={<History />} />
+                            <Route path="/settings" element={
+                              <SettingsComponent 
+                                userPreferences={userPreferences} 
+                                onUpdatePreferences={handleSavePreferences} 
+                              />
+                            } />
+                            <Route path="/help" element={<Help />} />
+                            <Route path="/newsletter" element={<NewsletterPage />} />
+                            <Route path="/polls" element={<Polls />} />
+                          </Routes>
+                        </div>
+                        
+                        <Footer className="sticky bottom-0 z-10" />
+                      </div>
                     </div>
-                  </div>
 
-                  <PreferenceSelection
-                    open={isPreferencesOpen}
-                    onClose={handleClosePreferences}
-                    onSave={handleSavePreferences}
-                    onNavigate={setCurrentView}
-                    errors={errors}
-                  />
-                </MainLayout>
-              }
-            />
-          </Routes>
+                    <PreferenceSelection
+                      open={isPreferencesOpen}
+                      onClose={handleClosePreferences}
+                      onSave={handleSavePreferences}
+                      onNavigate={setCurrentView}
+                      errors={errors}
+                    />
+                  </MainLayout>
+                }
+              />
+            </Routes>
+          </PageTransition>
           <Toaster position="top-right" />
         </div>
       </HelmetProvider>

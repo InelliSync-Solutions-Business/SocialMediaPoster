@@ -29,6 +29,7 @@ export const useNewsletter = (): UseNewsletterResult => {
   const [tokenUsage, setTokenUsage] = useState<TokenUsage | undefined>(undefined);
 
   const handleSubmit = useCallback(async (data: NewsletterFormData) => {
+    console.log('Newsletter Submit Data:', data);
     setIsLoading(true);
     setError(null);
     setLastSubmittedData(data);
@@ -48,6 +49,8 @@ export const useNewsletter = (): UseNewsletterResult => {
         additionalGuidelines: data.additionalGuidelines || '',
         model: data.model
       });
+      
+      console.log('Request Body:', requestBody);
       
       // Create AbortController for cancellation support
       const controller = new AbortController();

@@ -14,7 +14,22 @@ export const newsletterSchema = z.object({
     'financial-updates'
   ]),
   topic: z.string().min(1, 'Topic is required').max(200, 'Topic is too long'),
-  tone: z.enum(['professional', 'casual', 'inspirational', 'technical']),
+  tone: z.enum([
+    'professional', 
+    'casual', 
+    'inspirational', 
+    'technical', 
+    'engaging', 
+    'authoritative', 
+    'storytelling', 
+    'humorous', 
+    'persuasive', 
+    'insightful', 
+    'visionary', 
+    'educational', 
+    'empathetic', 
+    'controversial'
+  ]),
   length: z.enum(['short', 'medium', 'long']),
   targetAudience: z.string().min(1, 'Target audience is required'),
   writingStyle: z.string().min(1, 'Writing style is required'),

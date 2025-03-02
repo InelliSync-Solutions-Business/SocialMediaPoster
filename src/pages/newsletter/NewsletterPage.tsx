@@ -37,32 +37,30 @@ export const NewsletterPage: React.FC = () => {
         className="text-center mb-6"
       >
         <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-12 gap-4 md:gap-6 relative">
-        <div className="space-y-4 xl:col-span-5">
-          <div className="sticky top-6">
-            <ResponsiveContainer>
-              <NewsletterForm 
-                onSubmit={handleSubmit}
+          <div className="space-y-4 xl:col-span-10 xl:col-start-2">
+            <div className="sticky top-6 z-40">
+              <ResponsiveContainer>
+                <NewsletterForm 
+                  onSubmit={handleSubmit}
+                  isLoading={isLoading}
+                  error={error}
+                />
+              </ResponsiveContainer>
+            </div>
+            
+            <ResponsiveContainer className="relative z-50">
+              <NewsletterPreview 
+                newsletter={newsletter}
+                generatedContent={generatedContent}
                 isLoading={isLoading}
-                error={error}
+                onRegenerate={regenerateNewsletter}
+                onClear={clearNewsletter}
+                onUpdateContent={updateContent}
+                streamingState={streamingState}
               />
             </ResponsiveContainer>
           </div>
         </div>
-
-        <div className="space-y-4 xl:col-span-7">
-          <ResponsiveContainer>
-            <NewsletterPreview 
-              newsletter={newsletter}
-              generatedContent={generatedContent}
-              isLoading={isLoading}
-              onRegenerate={regenerateNewsletter}
-              onClear={clearNewsletter}
-              onUpdateContent={updateContent}
-              streamingState={streamingState}
-            />
-          </ResponsiveContainer>
-        </div>
-      </div>
       </Section>
     </MainLayout>
   );

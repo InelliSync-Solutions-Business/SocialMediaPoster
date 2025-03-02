@@ -12,7 +12,22 @@ export type NewsletterType =
   | 'global-trends'
   | 'financial-updates';
 
-export type NewsletterTone = 'professional' | 'casual' | 'inspirational' | 'technical';
+export type NewsletterTone = 
+  | 'professional' 
+  | 'casual' 
+  | 'inspirational' 
+  | 'technical'
+  | 'engaging'
+  | 'authoritative'
+  | 'storytelling'
+  | 'humorous'
+  | 'persuasive'
+  | 'insightful'
+  | 'visionary'
+  | 'educational'
+  | 'empathetic'
+  | 'controversial';
+
 export type NewsletterLength = 'short' | 'medium' | 'long';
 
 export interface TokenUsage {

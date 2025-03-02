@@ -22,7 +22,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { NewsletterFormData, NewsletterType, NewsletterTone, NewsletterLength, AIModel } from '../types/newsletter';
 import { newsletterSchema } from '../utils/validation';
-import { Lightbulb, Sparkles, Megaphone, Newspaper, BookOpen, Award, GraduationCap, Briefcase, Globe, DollarSign, PenTool, MessageSquare, FileText, Zap, InfoIcon, Clock, Palette, Users } from 'lucide-react';
+import { Lightbulb, Sparkles, Megaphone, Newspaper, BookOpen, Award, GraduationCap, Briefcase, Globe, DollarSign, PenTool, MessageSquare, FileText, Zap, InfoIcon, Clock, Palette, Users, Heart, Flame } from 'lucide-react';
 import { AI_MODELS, getPricingString } from '@/utils/ai/modelInfo';
 import { ModelPreferences } from '@/components/ai/ModelPreferences';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -48,9 +48,19 @@ const NEWSLETTER_TYPES: { value: NewsletterType; label: string; icon: React.Reac
 
 const TONES: { value: NewsletterTone; label: string; icon: React.ReactNode }[] = [
   { value: 'professional', label: 'Professional', icon: <PenTool className="h-4 w-4" /> },
-  { value: 'casual', label: 'Casual', icon: <MessageSquare className="h-4 w-4" /> },
-  { value: 'inspirational', label: 'Inspirational', icon: <Zap className="h-4 w-4" /> },
-  { value: 'technical', label: 'Technical', icon: <FileText className="h-4 w-4" /> },
+  { value: 'casual', label: 'Casual & Friendly', icon: <MessageSquare className="h-4 w-4" /> },
+  { value: 'inspirational', label: 'Inspirational & Motivational', icon: <Zap className="h-4 w-4" /> },
+  { value: 'technical', label: 'Technical & Analytical', icon: <FileText className="h-4 w-4" /> },
+  { value: 'engaging', label: 'Engaging & Conversational', icon: <Users className="h-4 w-4" /> },
+  { value: 'authoritative', label: 'Authoritative & Thought Leadership', icon: <Award className="h-4 w-4" /> },
+  { value: 'storytelling', label: 'Storytelling & Narrative-Driven', icon: <BookOpen className="h-4 w-4" /> },
+  { value: 'humorous', label: 'Humorous & Witty', icon: <Sparkles className="h-4 w-4" /> },
+  { value: 'persuasive', label: 'Persuasive & Sales-Oriented', icon: <Megaphone className="h-4 w-4" /> },
+  { value: 'insightful', label: 'Insightful & Data-Driven', icon: <Lightbulb className="h-4 w-4" /> },
+  { value: 'visionary', label: 'Visionary & Future-Focused', icon: <Globe className="h-4 w-4" /> },
+  { value: 'educational', label: 'Educational & Informative', icon: <GraduationCap className="h-4 w-4" /> },
+  { value: 'empathetic', label: 'Empathetic & Supportive', icon: <Heart className="h-4 w-4" /> },
+  { value: 'controversial', label: 'Controversial & Debate-Stirring', icon: <Flame className="h-4 w-4" /> },
 ];
 
 const LENGTHS: { value: NewsletterLength; label: string; icon: React.ReactNode }[] = [
@@ -60,20 +70,20 @@ const LENGTHS: { value: NewsletterLength; label: string; icon: React.ReactNode }
 ];
 
 const TARGET_AUDIENCES = [
-  { value: 'business-executives', label: 'Business Executives' },
+  { value: 'tech-entrepreneurs', label: 'Tech Entrepreneurs' },
+  { value: 'business-executives', label: 'Business Executives & Founders' },
+  { value: 'product-managers', label: 'Product & Project Managers' },
+  { value: 'marketing-teams', label: 'Marketing & Growth Teams' },
+  { value: 'developers', label: 'Software Developers & Engineers' },
+  { value: 'designers', label: 'UX/UI & Product Designers' },
+  { value: 'ai-researchers', label: 'AI & ML Researchers' },
+  { value: 'investors', label: 'Investors & Venture Capitalists' },
+  { value: 'startup-enthusiasts', label: 'Startup Founders & Enthusiasts' },
+  { value: 'innovation-leaders', label: 'Innovation & Digital Transformation Leaders' },
   { value: 'custom', label: 'Custom (Specify)' },
-  { value: 'customers', label: 'Customers' },
-  { value: 'designers', label: 'Designers' },
-  { value: 'developers', label: 'Developers' },
-  { value: 'general-audience', label: 'General Audience' },
-  { value: 'investors', label: 'Investors' },
-  { value: 'marketing-teams', label: 'Marketing Teams' },
-  { value: 'partners', label: 'Partners' },
-  { value: 'product-managers', label: 'Product Managers' },
-  { value: 'tech-professionals', label: 'Tech Professionals' },
 ];
 
-const DEFAULT_AUDIENCE = 'tech-professionals';
+const DEFAULT_AUDIENCE = 'tech-entrepreneurs';
 
 export const NewsletterForm: React.FC<NewsletterFormProps> = ({
   onSubmit,
@@ -87,22 +97,34 @@ export const NewsletterForm: React.FC<NewsletterFormProps> = ({
   const {
     register,
     handleSubmit,
-    formState: { errors },
-    setValue,
+    formState: { errors, isSubmitting },
+    setError: setFormError,
     watch,
-    getValues,
+    setValue,
+    trigger
   } = useForm<NewsletterFormData>({
     resolver: zodResolver(newsletterSchema),
+    mode: 'onBlur',
     defaultValues: {
       type: 'tech-trends',
       tone: 'professional',
       length: 'medium',
       writingStyle: 'Informative',
-      targetAudience: DEFAULT_AUDIENCE,
+      targetAudience: TARGET_AUDIENCES.find(a => a.value === DEFAULT_AUDIENCE)?.label || '',
       keyPoints: [],
       model: 'gpt-4o-mini',
-    },
+    }
   });
+
+  // Local error state for form-level errors
+  const [formError, setFormErrorState] = useState<string | null>(null);
+
+  // Log any validation errors
+  useEffect(() => {
+    if (Object.keys(errors).length > 0) {
+      console.error('Form Validation Errors:', errors);
+    }
+  }, [errors]);
 
   // Initialize customAudience state based on whether the current value matches any predefined options
   useEffect(() => {
@@ -134,8 +156,39 @@ export const NewsletterForm: React.FC<NewsletterFormProps> = ({
   };
 
   const onFormSubmit = (data: NewsletterFormData) => {
+    console.log('Form Submit Data:', data);
+    
+    // Use a type-safe approach for required fields
+    const requiredFields = ['topic', 'type', 'tone', 'length'] as const;
+    const missingFields = requiredFields.filter(field => {
+      // Type-safe way to check if the field exists and is empty/undefined
+      return !data[field as keyof NewsletterFormData];
+    });
+    
+    if (missingFields.length > 0) {
+      console.error('Missing required fields:', missingFields);
+      
+      // Set form-level error
+      setFormErrorState(`Please fill in all required fields: ${missingFields.join(', ')}`);
+      
+      // Optionally, set individual field errors
+      missingFields.forEach(field => {
+        setFormError(field, { 
+          type: 'required', 
+          message: `${field.charAt(0).toUpperCase() + field.slice(1)} is required` 
+        });
+      });
+      
+      return;
+    }
+
+    // Clear any previous form-level errors
+    setFormErrorState(null);
+
     // Include key points in the form data
     data.keyPoints = keyPoints.filter(point => point.trim() !== '');
+    
+    console.log('Submitting form with data:', data);
     onSubmit(data);
   };
 
@@ -147,320 +200,376 @@ export const NewsletterForm: React.FC<NewsletterFormProps> = ({
   };
 
   return (
-    <Card className="shadow-lg border-0 bg-gradient-to-br from-card to-muted/50">
-      <CardHeader className="space-y-1 pb-2">
-        <CardTitle className="text-2xl font-bold">Create Your Newsletter</CardTitle>
-        <CardDescription>
-          Configure your newsletter settings to generate tailored content
-        </CardDescription>
-      </CardHeader>
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+    >
+      <Card className="z-40 shadow-lg border-0 bg-gradient-to-br from-card to-muted/50">
+        <form 
+          onSubmit={handleSubmit(onFormSubmit)} 
+          className="flex flex-col h-full"
+        >
+          <CardContent className="flex-1 overflow-hidden flex flex-col">
+            {(formError || error) && (
+              <motion.div 
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-destructive/10 border border-destructive/50 text-destructive p-3 rounded-lg mb-4 text-sm"
+              >
+                {formError || error}
+              </motion.div>
+            )}
 
-      <form onSubmit={(e) => e.preventDefault()} className="flex flex-col h-full">
-        <CardContent className="flex-1 overflow-hidden flex flex-col">
-          {error && (
-            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-              {error}
-            </div>
-          )}
-
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full flex-1 flex flex-col">
-            <TabsList className="grid grid-cols-3 mb-4">
-              <TabsTrigger value="basics">Basics</TabsTrigger>
-              <TabsTrigger value="style">Style</TabsTrigger>
-              <TabsTrigger value="content">Content</TabsTrigger>
-            </TabsList>
-            
-            <div className="flex-1 overflow-auto" style={{ minHeight: "450px", maxHeight: "60vh" }}>
-              <TabsContent value="basics" className="space-y-4 h-auto pb-8">
-                <div>
-                  <Label className="text-sm font-medium">Newsletter Type</Label>
-                  <div className="grid grid-cols-2 gap-2 mt-1">
-                    {NEWSLETTER_TYPES.map((type) => (
-                      <div
-                        key={type.value}
-                        className={`p-3 rounded-md border cursor-pointer transition-all hover:bg-accent hover:text-accent-foreground flex items-center space-x-2 ${
-                          watch('type') === type.value
-                            ? 'border-primary bg-primary/10 text-primary'
-                            : 'border-border'
-                        }`}
-                        onClick={() => setValue('type', type.value)}
-                      >
-                        <div className="flex-shrink-0">{type.icon}</div>
-                        <div className="text-sm truncate">{type.label}</div>
-                      </div>
-                    ))}
-                  </div>
-                  {errors.type && (
-                    <p className="text-red-500 text-sm mt-1">{errors.type.message}</p>
-                  )}
-                </div>
-
-                <div>
-                  <Label htmlFor="topic" className="text-sm font-medium">Topic</Label>
-                  <Input
-                    id="topic"
-                    {...register('topic')}
-                    placeholder="Enter the main topic of your newsletter"
-                    className="mt-1"
-                  />
-                  {errors.topic && (
-                    <p className="text-red-500 text-sm mt-1">{errors.topic.message}</p>
-                  )}
-                </div>
-
-                <div>
-                  <Label htmlFor="targetAudience" className="text-sm font-medium">Target Audience</Label>
-                  <div className="mt-1">
-                    <Select
-                      onValueChange={(value) => {
-                        if (value === 'custom') {
-                          setCustomAudience(true);
-                          // Clear the field for custom input
-                          setValue('targetAudience', '');
-                        } else {
-                          setCustomAudience(false);
-                          // For predefined audiences, use the label as the value
-                          const selectedAudience = TARGET_AUDIENCES.find(a => a.value === value);
-                          setValue('targetAudience', selectedAudience?.label || value);
-                        }
-                      }}
-                      value={customAudience ? 'custom' : (
-                        TARGET_AUDIENCES.find(a => a.label === watch('targetAudience'))?.value || 
-                        TARGET_AUDIENCES.find(a => a.value === watch('targetAudience'))?.value || 
-                        DEFAULT_AUDIENCE
-                      )}
-                    >
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Select target audience" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {TARGET_AUDIENCES.map((audience) => (
-                          <SelectItem key={audience.value} value={audience.value}>
-                            {audience.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    
-                    {customAudience && (
-                      <div className="flex items-center mt-2 relative">
-                        <Users className="h-4 w-4 absolute left-3 text-muted-foreground" />
-                        <Input
-                          id="customTargetAudience"
-                          value={watch('targetAudience')}
-                          onChange={(e) => setValue('targetAudience', e.target.value)}
-                          placeholder="Specify your target audience"
-                          className="pl-10"
-                        />
-                      </div>
-                    )}
-                  </div>
-                  {errors.targetAudience && (
-                    <p className="text-red-500 text-sm mt-1">{errors.targetAudience.message}</p>
-                  )}
-                </div>
-              </TabsContent>
-
-              <TabsContent value="style" className="space-y-4 h-auto pb-8">
-                <div className="space-y-4 mt-6">
-                  <div className="space-y-2">
-                    <Label htmlFor="tone" className="text-sm font-medium">Tone</Label>
-                    <div className="grid grid-cols-2 gap-2 mt-1">
-                      {TONES.map((tone) => (
-                        <div
-                          key={tone.value}
-                          className={`p-3 rounded-md border cursor-pointer transition-all hover:bg-accent hover:text-accent-foreground flex items-center space-x-2 ${
-                            watch('tone') === tone.value
-                              ? 'border-primary bg-primary/10 text-primary'
-                              : 'border-border'
-                          }`}
-                          onClick={() => setValue('tone', tone.value)}
-                        >
-                          <div className="flex-shrink-0">{tone.icon}</div>
-                          <div className="text-sm truncate">{tone.label}</div>
-                        </div>
-                      ))}
-                    </div>
-                    {errors.tone && (
-                      <p className="text-red-500 text-sm mt-1">{errors.tone.message}</p>
-                    )}
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="length" className="text-sm font-medium">Length</Label>
-                    <div className="grid grid-cols-3 gap-2 mt-1">
-                      {LENGTHS.map((length) => (
-                        <div
-                          key={length.value}
-                          className={`p-3 rounded-md border cursor-pointer transition-all hover:bg-accent hover:text-accent-foreground flex items-center space-x-2 ${
-                            watch('length') === length.value
-                              ? 'border-primary bg-primary/10 text-primary'
-                              : 'border-border'
-                          }`}
-                          onClick={() => setValue('length', length.value)}
-                        >
-                          <div className="flex-shrink-0">{length.icon}</div>
-                          <div className="text-sm truncate">{length.label}</div>
-                        </div>
-                      ))}
-                    </div>
-                    {errors.length && (
-                      <p className="text-red-500 text-sm mt-1">{errors.length.message}</p>
-                    )}
-                  </div>
-
-                  <div className="space-y-2">
-                    <div className="flex justify-between items-center">
-                      <Label htmlFor="model" className="text-sm font-medium flex items-center gap-1.5">
-                        AI Model
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <span className="cursor-help">
-                                <InfoIcon className="h-3.5 w-3.5 inline-block text-muted-foreground" />
-                              </span>
-                            </TooltipTrigger>
-                            <TooltipContent side="top">
-                              <p className="max-w-60 text-xs">
-                                Select the AI model to use for generating your newsletter. More powerful models may produce better results but cost more.
-                              </p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                      </Label>
-                      
-                      <ModelPreferences 
-                        currentModel={currentModel} 
-                        onModelChange={handleModelChange}
-                      />
-                    </div>
-                    
-                    <div className="space-y-4">
-                      <Select
-                        value={currentModel}
-                        onValueChange={(value) => setValue('model', value as AIModel)}
-                      >
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Select AI Model" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {Object.entries(AI_MODELS).map(([modelId, modelInfo]) => (
-                            <SelectItem key={modelId} value={modelId}>
-                              <div className="flex justify-between items-center w-full">
-                                <span>{modelInfo.name}</span>
-                                <span className="text-xs text-muted-foreground ml-2">{getPricingString(modelId as AIModel)}</span>
-                              </div>
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      {errors.model && (
-                        <p className="text-sm text-red-500">{errors.model.message}</p>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </TabsContent>
-
-              <TabsContent value="content" className="space-y-4 h-auto pb-8">
-                <Label className="text-sm font-medium flex items-center justify-between">
-                  <span>Key Points</span>
-                  <Button 
-                    type="button" 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={addKeyPoint}
-                    className="h-8 px-2 text-xs"
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full flex-1 flex flex-col">
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.2 }}
+              >
+                <TabsList className="grid grid-cols-3 mb-4">
+                  <TabsTrigger value="basics">Basics</TabsTrigger>
+                  <TabsTrigger value="style">Style</TabsTrigger>
+                  <TabsTrigger value="content">Content</TabsTrigger>
+                </TabsList>
+              </motion.div>
+              
+              <div className="flex-1 overflow-auto" style={{ minHeight: "450px", maxHeight: "60vh" }}>
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={activeTab}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: 20 }}
+                    transition={{ duration: 0.3 }}
                   >
-                    + Add Point
-                  </Button>
-                </Label>
-                <div className="space-y-2 mt-1">
-                  {keyPoints.map((point, index) => (
-                    <div key={index} className="flex gap-2">
-                      <Input
-                        value={point}
-                        onChange={(e) => updateKeyPoint(index, e.target.value)}
-                        placeholder={`Key point ${index + 1}`}
-                        className="flex-1"
-                      />
-                      {keyPoints.length > 1 && (
-                        <Button 
-                          type="button" 
-                          variant="ghost" 
-                          size="icon" 
-                          onClick={() => removeKeyPoint(index)}
-                          className="h-10 w-10"
-                        >
-                          ×
-                        </Button>
-                      )}
-                    </div>
-                  ))}
-                </div>
+                    <TabsContent 
+                      value={activeTab}
+                      className="space-y-4 h-auto pb-8"
+                    >
+                      <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.2 }}
+                      >
+                        {activeTab === 'basics' && (
+                          <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ delay: 0.2 }}
+                          >
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div className="space-y-2">
+                                <Label htmlFor="topic">Newsletter Topic</Label>
+                                <Input
+                                  {...register('topic')}
+                                  placeholder="Enter your newsletter topic"
+                                  className="w-full"
+                                />
+                                {errors.topic && (
+                                  <p className="text-destructive text-sm">{errors.topic.message}</p>
+                                )}
+                              </div>
+                              
+                              <div className="space-y-2">
+                                <Label htmlFor="type">Newsletter Type</Label>
+                                <div className="grid grid-cols-2 gap-2">
+                                  {NEWSLETTER_TYPES.map((type, index) => (
+                                    <motion.div
+                                      key={type.value}
+                                      initial={{ opacity: 0 }}
+                                      animate={{ opacity: 1 }}
+                                      transition={{ delay: index * 0.05 }}
+                                    >
+                                      <div
+                                        key={type.value}
+                                        className={`p-3 rounded-md border cursor-pointer transition-all hover:bg-accent hover:text-accent-foreground flex items-center space-x-2 ${
+                                          watch('type') === type.value
+                                            ? 'border-primary bg-primary/10 text-primary'
+                                            : 'border-border'
+                                        }`}
+                                        onClick={() => setValue('type', type.value)}
+                                      >
+                                        <div className="flex-shrink-0">{type.icon}</div>
+                                        <div className="text-sm truncate">{type.label}</div>
+                                      </div>
+                                    </motion.div>
+                                  ))}
+                                </div>
+                                {errors.type && (
+                                  <p className="text-destructive text-sm mt-1">{errors.type.message}</p>
+                                )}
+                              </div>
+                            </div>
+                          </motion.div>
+                        )}
+                        {activeTab === 'style' && (
+                          <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ delay: 0.2 }}
+                          >
+                            <div className="space-y-4 mt-6">
+                              <div className="space-y-2">
+                                <Label htmlFor="tone" className="text-sm font-medium">Tone</Label>
+                                <div className="grid grid-cols-2 gap-2 mt-1">
+                                  {TONES.map((tone, index) => (
+                                    <motion.div
+                                      key={tone.value}
+                                      initial={{ opacity: 0 }}
+                                      animate={{ opacity: 1 }}
+                                      transition={{ delay: index * 0.05 }}
+                                    >
+                                      <div
+                                        key={tone.value}
+                                        className={`p-3 rounded-md border cursor-pointer transition-all hover:bg-accent hover:text-accent-foreground flex items-center space-x-2 ${
+                                          watch('tone') === tone.value
+                                            ? 'border-primary bg-primary/10 text-primary'
+                                            : 'border-border'
+                                        }`}
+                                        onClick={() => setValue('tone', tone.value)}
+                                      >
+                                        <div className="flex-shrink-0">{tone.icon}</div>
+                                        <div className="text-sm truncate">{tone.label}</div>
+                                      </div>
+                                    </motion.div>
+                                  ))}
+                                </div>
+                                {errors.tone && (
+                                  <p className="text-red-500 text-sm mt-1">{errors.tone.message}</p>
+                                )}
+                              </div>
 
-                <Label htmlFor="additionalGuidelines" className="text-sm font-medium">Additional Guidelines (Optional)</Label>
-                <Textarea
-                  id="additionalGuidelines"
-                  {...register('additionalGuidelines')}
-                  placeholder="Any specific requirements or preferences?"
-                  className="h-24 mt-1"
-                />
-              </TabsContent>
+                              <div className="space-y-2">
+                                <Label htmlFor="length" className="text-sm font-medium">Length</Label>
+                                <div className="grid grid-cols-3 gap-2 mt-1">
+                                  {LENGTHS.map((length) => (
+                                    <motion.div
+                                      key={length.value}
+                                      initial={{ opacity: 0 }}
+                                      animate={{ opacity: 1 }}
+                                      transition={{ delay: 0.05 }}
+                                    >
+                                      <div
+                                        key={length.value}
+                                        className={`p-3 rounded-md border cursor-pointer transition-all hover:bg-accent hover:text-accent-foreground flex items-center space-x-2 ${
+                                          watch('length') === length.value
+                                            ? 'border-primary bg-primary/10 text-primary'
+                                            : 'border-border'
+                                        }`}
+                                        onClick={() => setValue('length', length.value)}
+                                      >
+                                        <div className="flex-shrink-0">{length.icon}</div>
+                                        <div className="text-sm truncate">{length.label}</div>
+                                      </div>
+                                    </motion.div>
+                                  ))}
+                                </div>
+                                {errors.length && (
+                                  <p className="text-red-500 text-sm mt-1">{errors.length.message}</p>
+                                )}
+                              </div>
+
+                              <div className="space-y-2">
+                                <div className="flex justify-between items-center">
+                                  <Label htmlFor="model" className="text-sm font-medium flex items-center gap-1.5">
+                                    AI Model
+                                    <TooltipProvider>
+                                      <Tooltip>
+                                        <TooltipTrigger asChild>
+                                          <span className="cursor-help">
+                                            <InfoIcon className="h-3.5 w-3.5 inline-block text-muted-foreground" />
+                                          </span>
+                                        </TooltipTrigger>
+                                        <TooltipContent side="top">
+                                          <p className="max-w-60 text-xs">
+                                            Select the AI model to use for generating your newsletter. More powerful models may produce better results but cost more.
+                                          </p>
+                                        </TooltipContent>
+                                      </Tooltip>
+                                    </TooltipProvider>
+                                  </Label>
+                                  
+                                  <ModelPreferences 
+                                    currentModel={currentModel} 
+                                    onModelChange={handleModelChange}
+                                  />
+                                </div>
+                                
+                                <div className="space-y-4">
+                                  <Select
+                                    value={currentModel}
+                                    onValueChange={(value) => setValue('model', value as AIModel)}
+                                  >
+                                    <SelectTrigger className="w-full">
+                                      <SelectValue placeholder="Select AI Model" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      {Object.entries(AI_MODELS).map(([modelId, modelInfo]) => (
+                                        <SelectItem key={modelId} value={modelId}>
+                                          <div className="flex justify-between items-center w-full">
+                                            <span>{modelInfo.name}</span>
+                                            <span className="text-xs text-muted-foreground ml-2">{getPricingString(modelId as AIModel)}</span>
+                                          </div>
+                                        </SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
+                                  {errors.model && (
+                                    <p className="text-sm text-red-500">{errors.model.message}</p>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          </motion.div>
+                        )}
+                        {activeTab === 'content' && (
+                          <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ delay: 0.2 }}
+                          >
+                            <Label className="text-sm font-medium flex items-center justify-between">
+                              <span>Key Points</span>
+                              <Button 
+                                type="button" 
+                                variant="outline" 
+                                size="sm" 
+                                onClick={addKeyPoint}
+                                className="h-8 px-2 text-xs"
+                              >
+                                + Add Point
+                              </Button>
+                            </Label>
+                            <div className="space-y-2 mt-1">
+                              {keyPoints.map((point, index) => (
+                                <motion.div
+                                  key={index}
+                                  initial={{ opacity: 0 }}
+                                  animate={{ opacity: 1 }}
+                                  transition={{ delay: index * 0.05 }}
+                                >
+                                  <div className="flex gap-2">
+                                    <Input
+                                      value={point}
+                                      onChange={(e) => updateKeyPoint(index, e.target.value)}
+                                      placeholder={`Key point ${index + 1}`}
+                                      className="flex-1"
+                                    />
+                                    {keyPoints.length > 1 && (
+                                      <Button 
+                                        type="button" 
+                                        variant="ghost" 
+                                        size="icon" 
+                                        onClick={() => removeKeyPoint(index)}
+                                        className="h-10 w-10"
+                                      >
+                                        ×
+                                      </Button>
+                                    )}
+                                  </div>
+                                </motion.div>
+                              ))}
+                            </div>
+
+                            <Label htmlFor="additionalGuidelines" className="text-sm font-medium">Additional Guidelines (Optional)</Label>
+                            <Textarea
+                              id="additionalGuidelines"
+                              {...register('additionalGuidelines')}
+                              placeholder="Any specific requirements or preferences?"
+                              className="h-24 mt-1"
+                            />
+                          </motion.div>
+                        )}
+                      </motion.div>
+                    </TabsContent>
+                  </motion.div>
+                </AnimatePresence>
+              </div>
+            </Tabs>
+          </CardContent>
+          
+          <CardFooter className="border-t px-6 py-4">
+            <div className="flex w-full space-x-2">
+              {activeTab !== 'basics' && (
+                <motion.div 
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="flex-1"
+                >
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      const tabs = ['content', 'style', 'basics'];
+                      const currentIndex = tabs.indexOf(activeTab);
+                      setActiveTab(tabs[currentIndex - 1]);
+                    }}
+                    className="w-full"
+                  >
+                    Back
+                  </Button>
+                </motion.div>
+              )}
+              
+              {activeTab !== 'content' && (
+                <motion.div 
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="flex-1"
+                >
+                  <Button
+                    type="button"
+                    onClick={() => {
+                      const tabs = ['basics', 'style', 'content'];
+                      const currentIndex = tabs.indexOf(activeTab);
+                      setActiveTab(tabs[currentIndex + 1]);
+                    }}
+                    className="w-full"
+                  >
+                    Next
+                  </Button>
+                </motion.div>
+              )}
+              
+              {activeTab === 'content' && (
+                <motion.div 
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="w-full"
+                >
+                  <Button
+                    type="submit"
+                    disabled={isLoading}
+                    className="w-full bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-opacity"
+                  >
+                    {isLoading ? (
+                      <div className="flex items-center gap-2">
+                        <motion.div 
+                          animate={{ rotate: 360 }}
+                          transition={{ 
+                            repeat: Infinity, 
+                            duration: 1, 
+                            ease: "linear" 
+                          }}
+                        >
+                          <div className="h-4 w-4 border-2 border-current border-t-transparent rounded-full" />
+                        </motion.div>
+                        <span>Generating...</span>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <Sparkles className="h-4 w-4" />
+                        <span>Generate Newsletter</span>
+                      </div>
+                    )}
+                  </Button>
+                </motion.div>
+              )}
             </div>
-          </Tabs>
-        </CardContent>
-        
-        <CardFooter className="border-t pt-4 bg-background">
-          <div className="flex justify-between w-full">
-            {activeTab !== 'basics' && (
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => {
-                  if (activeTab === 'style') setActiveTab('basics');
-                  if (activeTab === 'content') setActiveTab('style');
-                }}
-              >
-                Back
-              </Button>
-            )}
-            {activeTab === 'basics' && <div />}
-            
-            {activeTab !== 'content' ? (
-              <Button
-                type="button"
-                onClick={() => {
-                  if (activeTab === 'basics') setActiveTab('style');
-                  if (activeTab === 'style') setActiveTab('content');
-                }}
-                className={activeTab === 'basics' ? 'ml-auto' : ''}
-              >
-                Next
-              </Button>
-            ) : (
-              <Button
-                type="button"
-                disabled={isLoading}
-                onClick={handleSubmit(onFormSubmit)}
-                className="w-full bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-opacity"
-              >
-                {isLoading ? (
-                  <div className="flex items-center gap-2">
-                    <div className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full" />
-                    <span>Generating...</span>
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-2">
-                    <Sparkles className="h-4 w-4" />
-                    <span>Generate Newsletter</span>
-                  </div>
-                )}
-              </Button>
-            )}
-          </div>
-        </CardFooter>
-      </form>
-    </Card>
+          </CardFooter>
+        </form>
+      </Card>
+    </motion.div>
   );
 };

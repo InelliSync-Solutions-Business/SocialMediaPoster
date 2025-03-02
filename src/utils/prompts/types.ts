@@ -9,7 +9,23 @@
 import { UserPreferences } from '@/types/preferences';
 
 // Basic tone options available across content types
-export type ToneType = 'professional' | 'casual' | 'inspirational' | 'humorous' | 'analytical' | 'conversational';
+export type ToneType = 
+  | 'professional' 
+  | 'casual' 
+  | 'inspirational' 
+  | 'humorous' 
+  | 'analytical' 
+  | 'conversational'
+  | 'technical'
+  | 'engaging'
+  | 'authoritative'
+  | 'storytelling'
+  | 'persuasive'
+  | 'insightful'
+  | 'visionary'
+  | 'educational'
+  | 'empathetic'
+  | 'controversial';
 
 // Basic content length options
 export type ContentLength = 'short' | 'medium' | 'long';

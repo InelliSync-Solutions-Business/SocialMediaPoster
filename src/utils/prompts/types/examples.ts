@@ -170,7 +170,11 @@ function typeNarrowingExample(tone: unknown, platform: unknown): void {
   function isValidTone(value: unknown): value is ToneType {
     const validTones: ToneType[] = [
       'professional', 'casual', 'inspirational', 
-      'humorous', 'analytical', 'conversational'
+      'humorous', 'analytical', 'conversational',
+      'technical', 'engaging', 'authoritative',
+      'storytelling', 'persuasive', 'insightful',
+      'visionary', 'educational', 'empathetic',
+      'controversial'
     ];
     return typeof value === 'string' && validTones.includes(value as ToneType);
   }

@@ -41,7 +41,17 @@ export const getToneDescriptors = (tone: ToneType): string[] => {
     'conversational': ['engaging', 'natural', 'approachable', 'warm'],
     'inspirational': ['uplifting', 'motivational', 'encouraging', 'positive'],
     'humorous': ['witty', 'light-hearted', 'playful', 'entertaining'],
-    'analytical': ['detailed', 'logical', 'data-driven', 'thorough']
+    'analytical': ['detailed', 'logical', 'data-driven', 'thorough'],
+    'technical': ['precise', 'detailed', 'specialized', 'expert-level'],
+    'engaging': ['interactive', 'captivating', 'interesting', 'dynamic'],
+    'authoritative': ['expert', 'commanding', 'credible', 'definitive'],
+    'storytelling': ['narrative', 'descriptive', 'immersive', 'compelling'],
+    'persuasive': ['convincing', 'influential', 'compelling', 'strategic'],
+    'insightful': ['perceptive', 'thoughtful', 'illuminating', 'astute'],
+    'visionary': ['forward-thinking', 'innovative', 'pioneering', 'futuristic'],
+    'educational': ['instructive', 'explanatory', 'informative', 'enlightening'],
+    'empathetic': ['understanding', 'compassionate', 'supportive', 'sensitive'],
+    'controversial': ['provocative', 'challenging', 'thought-provoking', 'bold']
   };
   
   return descriptors[tone] || descriptors.professional;
