@@ -2,6 +2,15 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { PlusCircle, Trash2 } from 'lucide-react';
 import AILoader from './AILoader';
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from './ui/select';
+import { RadioGroup, RadioGroupItem } from './ui/radio-group';
+import { Label } from './ui/label';
 
 interface PollOption {
   id: string;
@@ -10,6 +19,8 @@ interface PollOption {
 
 const Polls: React.FC = () => {
   const [topic, setTopic] = useState('');
+  const [pollType, setPollType] = useState<'multiple' | 'yes-no'>('multiple');
+  const [optionCount, setOptionCount] = useState<string>('3');
   const [audience, setAudience] = useState('');
   const [style, setStyle] = useState('');
   const [guidelines, setGuidelines] = useState('');
@@ -18,6 +29,32 @@ const Polls: React.FC = () => {
     question: string;
     options: string[];
   } | null>(null);
+
+  const audienceOptions = [
+    'Tech Professionals',
+    'Entrepreneurs',
+    'Students',
+    'Marketing Experts',
+    'General Public',
+    'Startup Founders',
+    'Freelancers'
+  ];
+
+  const styleOptions = [
+    'Professional',
+    'Casual',
+    'Engaging',
+    'Thought-Provoking',
+    'Humorous',
+    'Serious',
+    'Inspirational'
+  ];
+
+  const optionCountOptions = [
+    { value: '2', label: '2 Options' },
+    { value: '3', label: '3 Options' },
+    { value: '4', label: '4 Options' }
+  ];
 
   const generatePoll = async () => {
     if (!topic.trim()) {
@@ -38,7 +75,9 @@ const Polls: React.FC = () => {
           topic,
           audience,
           style,
-          guidelines
+          guidelines,
+          pollType,
+          optionCount: pollType === 'multiple' ? parseInt(optionCount) : 2
         })
       });
 
@@ -95,30 +134,83 @@ const Polls: React.FC = () => {
           />
         </div>
 
+        <div className="poll-type-selection">
+          <label>
+            <input 
+              type="radio" 
+              value="multiple" 
+              checked={pollType === 'multiple'}
+              onChange={() => setPollType('multiple')}
+            />
+            Multiple Choice
+          </label>
+          <label>
+            <input 
+              type="radio" 
+              value="yes-no" 
+              checked={pollType === 'yes-no'}
+              onChange={() => setPollType('yes-no')}
+            />
+            Yes/No
+          </label>
+        </div>
+
+        {pollType === 'multiple' && (
+          <div className="option-count-selection">
+            <label>Number of Options:</label>
+            <select 
+              value={optionCount} 
+              onChange={(e) => setOptionCount(e.target.value)}
+            >
+              {optionCountOptions.map(option => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+
         <div>
           <label className="block text-sm font-medium mb-2 text-foreground/80 dark:text-foreground/70">
             Target Audience
           </label>
-          <textarea
-            className="w-full p-4 rounded-lg bg-white dark:bg-secondary/20 border border-border/50 focus:border-primary/50 focus:ring-2 focus:ring-primary/30 transition-all resize-none shadow-lifted dark:shadow-dark-lifted placeholder-foreground/50"
-            placeholder="Who is your target audience? Be specific about their interests, demographics, and pain points."
-            value={audience}
-            onChange={(e) => setAudience(e.target.value)}
-            rows={3}
-          />
+          <Select 
+            value={audience} 
+            onValueChange={(value) => setAudience(value)}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select target audience" />
+            </SelectTrigger>
+            <SelectContent>
+              {audienceOptions.map((option) => (
+                <SelectItem key={option} value={option}>
+                  {option}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         <div>
           <label className="block text-sm font-medium mb-2 text-foreground/80 dark:text-foreground/70">
             Poll Style
           </label>
-          <textarea
-            className="w-full p-4 rounded-lg bg-white dark:bg-secondary/20 border border-border/50 focus:border-primary/50 focus:ring-2 focus:ring-primary/30 transition-all resize-none shadow-lifted dark:shadow-dark-lifted placeholder-foreground/50"
-            placeholder="How should the poll be written? (e.g., professional, casual, engaging)"
-            value={style}
-            onChange={(e) => setStyle(e.target.value)}
-            rows={3}
-          />
+          <Select 
+            value={style} 
+            onValueChange={(value) => setStyle(value)}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select poll style" />
+            </SelectTrigger>
+            <SelectContent>
+              {styleOptions.map((option) => (
+                <SelectItem key={option} value={option}>
+                  {option}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         <div>
@@ -127,7 +219,7 @@ const Polls: React.FC = () => {
           </label>
           <textarea
             className="w-full p-4 rounded-lg bg-white dark:bg-secondary/20 border border-border/50 focus:border-primary/50 focus:ring-2 focus:ring-primary/30 transition-all resize-none shadow-lifted dark:shadow-dark-lifted placeholder-foreground/50"
-            placeholder="Any specific requirements for the poll? (e.g., tone, number of options)"
+            placeholder="Any specific requirements for the poll? (e.g., tone, specific constraints)"
             value={guidelines}
             onChange={(e) => setGuidelines(e.target.value)}
             rows={3}

@@ -81,33 +81,49 @@ Please generate the thread now:`;
 }
 
 // Helper function to build poll prompt
-export function buildPollPrompt({ topic, audience, style, guidelines }: {
-  topic: string;
-  audience: string;
-  style: string;
-  guidelines: string;
-}) {
+export function buildPollPrompt(
+  type: 'social-media', 
+  topic: string, 
+  style: string, 
+  audience: string, 
+  guidelines: string, 
+  pollType: 'multiple' | 'yes-no' = 'multiple', 
+  optionCount: 2 | 3 | 4 = 3
+) {
+  const optionTemplates = {
+    2: ['Option A', 'Option B'],
+    3: ['Option A', 'Option B', 'Option C'],
+    4: ['Option A', 'Option B', 'Option C', 'Option D']
+  };
+
+  const selectedOptions = pollType === 'yes-no' 
+    ? ['Yes', 'No']
+    : optionTemplates[optionCount];
+
   return `
-Generate an engaging social media poll.
+Generate a social media poll.
+Poll Type: ${pollType === 'multiple' ? 'Multiple Choice' : 'Yes/No'}
 Topic: ${topic}
 Target Audience: ${audience}
 Style: ${style}
+Number of Options: ${pollType === 'multiple' ? optionCount : 2}
 Guidelines: ${guidelines}
 
+POLL GENERATION INSTRUCTIONS:
+- Create a poll that is engaging and thought-provoking
+- Ensure options are distinct and capture different perspectives
+- ${pollType === 'yes-no' 
+    ? 'Craft a question that can be answered with a clear Yes or No' 
+    : `Provide ${optionCount} unique and compelling options`}
+
 Please format the response with proper structure and formatting:
-# [ENGAGING POLL TITLE]
+# [POLL TITLE]
 
 ## Poll Question
 [Your question here]
 
 ## Options
-- Option A: [First option]
-- Option B: [Second option]
-- Option C: [Third option]
-- Option D: [Fourth option]
-
-## Engagement Strategy
-[Brief explanation of why this poll is engaging and how it connects with the audience]
+${selectedOptions.map((option, index) => `- ${option}: [${option} description]`).join('\n')}
 `;
 }
 

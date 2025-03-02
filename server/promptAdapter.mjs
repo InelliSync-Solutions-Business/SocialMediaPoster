@@ -83,45 +83,35 @@ FORMATTING REQUIREMENTS:
 /**
  * Builds a prompt for social media polls
  */
-export function buildPollPrompt(platform, topic, style, audience, additionalGuidelines = '') {
-  try {
-    // Validate input parameters
-    if (!topic) {
-      console.warn('No topic provided for poll prompt generation');
-      topic = 'general discussion';
-    }
-    
-    // Log the poll prompt generation
-    console.log(`Generating poll prompt for ${platform || 'social media'} about ${topic}`);
-    
-    const tone = mapStyleToTone(style);
-    
-    return `
-    Create a poll for ${platform || 'twitter'} about ${topic}.
-    Target audience: ${audience || 'General audience'}
-    Tone: ${tone}
-    Style: ${style || 'conversational'}
-    Additional guidelines: ${additionalGuidelines || ''}
-    
-    Format your response as follows:
-    Question: [The poll question]
-    
-    Options:
-    1. [First option]
-    2. [Second option]
-    3. [Third option]
-    4. [Fourth option (optional)]
-    `;
-  } catch (error) {
-    console.error('Error in buildPollPrompt:', error);
-    // Return a fallback prompt in case of error
-    return `
-Generate an engaging social media poll.
-Topic: ${topic || 'general discussion'}
+export function buildPollPrompt(type, topic, style, audience, guidelines, pollType = 'multiple', optionCount = 3) {
+  const optionTemplates = {
+    2: ['Option A', 'Option B'],
+    3: ['Option A', 'Option B', 'Option C'],
+    4: ['Option A', 'Option B', 'Option C', 'Option D']
+  };
 
-Please format the response with proper structure and include 2-4 compelling options.
+  const selectedOptions = optionTemplates[optionCount];
+
+  return `
+Generate an engaging social media poll.
+Poll Type: ${pollType === 'multiple' ? 'Multiple Choice' : 'Yes/No'}
+Topic: ${topic}
+Target Audience: ${audience}
+Style: ${style}
+Guidelines: ${guidelines}
+
+Please format the response with proper structure and formatting:
+# [ENGAGING POLL TITLE]
+
+## Poll Question
+[Your question here]
+
+## Options
+${selectedOptions.map((option, index) => `- ${option}: [${option} description]`).join('\n')}
+
+## Engagement Strategy
+[Brief explanation of why this poll is engaging and how it connects with the audience]
 `;
-  }
 }
 
 /**

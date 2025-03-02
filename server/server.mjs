@@ -260,8 +260,8 @@ app.post('/api/generateImage', async (req, res) => {
 // Generate poll endpoint
 app.post('/api/generate-poll', async (req, res) => {
   try {
-    const { topic, audience, style, guidelines, model } = req.body;
-    console.log('Received poll generation request:', { topic, audience, style, guidelines });
+    const { topic, audience, style, guidelines, model, pollType, optionCount } = req.body;
+    console.log('Received poll generation request:', { topic, audience, style, guidelines, pollType, optionCount });
 
     // Input validation
     if (!topic) {
@@ -283,14 +283,14 @@ app.post('/api/generate-poll', async (req, res) => {
       apiKey: process.env.OPENAI_API_KEY
     });
 
-    const prompt = buildPollPrompt('social-media', topic, style, audience, guidelines);
+    const prompt = buildPollPrompt('social-media', topic, style, audience, guidelines, pollType, optionCount);
 
     const completion = await openai.chat.completions.create({
-      model: 'gpt-4o-mini', // Use a specific model directly instead of getOpenAIModel
+      model: getOpenAIModel(model),
       messages: [
         {
           role: 'system',
-          content: systemPrompts.poll
+          content: systemPrompts.poll + ` Specifically generate a ${pollType === 'yes-no' ? 'Yes/No' : 'Multiple Choice'} poll with ${optionCount} options.`
         },
         {
           role: 'user',
@@ -299,65 +299,51 @@ app.post('/api/generate-poll', async (req, res) => {
       ]
     });
 
-    const content = completion.choices[0].message.content.trim();
-    const lines = content.split('\n').filter(line => line.trim());
+    const generatedPollText = completion.choices[0].message.content;
     
-    // Extract the title (line starting with #)
-    const titleMatch = content.match(/^#\s+(.+)$/m);
-    const title = titleMatch ? titleMatch[1].trim() : '';
-    
-    // Extract the question (line after ## Poll Question)
-    let question = '';
-    const questionMatch = content.match(/##\s+Poll\s+Question\s*\n+([^\n#]+)/i);
-    if (questionMatch) {
-      question = questionMatch[1].trim();
-    } else {
-      // Fallback to old format if needed
-      const questionLine = lines.find(line => !line.startsWith('#'));
-      if (questionLine) {
-        question = questionLine.replace(/^[0-9]+\.\s*/, '').trim();
-      }
+    // Extract question and options
+    const questionMatch = generatedPollText.match(/## Poll Question\n(.*)/);
+    const optionsMatch = generatedPollText.match(/## Options\n((?:- .*\n)*)/);
+
+    const question = questionMatch ? questionMatch[1].trim() : 'No question generated';
+    const options = optionsMatch 
+      ? optionsMatch[1].split('\n')
+        .filter(option => option.trim().startsWith('- '))
+        .map(option => option.replace(/^- /, '').trim())
+      : [];
+
+    // Enforce option count based on poll type
+    const finalOptions = pollType === 'yes-no' 
+      ? ['Yes', 'No']  // Always use Yes/No for Yes/No polls
+      : (() => {
+          // First, clean and trim options
+          const cleanedOptions = options
+            .map(option => option.replace(/\[.*\]/, '').trim())
+            .filter(option => option.length > 0);
+          
+          // If we have fewer options than requested, generate placeholders
+          const processedOptions = [];
+          for (let i = 0; i < optionCount; i++) {
+            if (i < cleanedOptions.length) {
+              processedOptions.push(cleanedOptions[i]);
+            } else {
+              processedOptions.push(`Option ${String.fromCharCode(65 + processedOptions.length)}`);
+            }
+          }
+          
+          return processedOptions.slice(0, optionCount);
+        })();
+
+    // If we still don't have enough options, generate placeholders
+    while (finalOptions.length < optionCount) {
+      finalOptions.push(`Option ${String.fromCharCode(65 + finalOptions.length)}`);
     }
-    
-    // Extract options (lines after ## Options)
-    const options = [];
-    const optionsSection = content.match(/##\s+Options\s*\n+([\s\S]*?)(?=\n##|$)/i);
-    
-    if (optionsSection) {
-      // Extract bullet points
-      const optionMatches = optionsSection[1].match(/[-*]\s+Option\s+[A-D]:\s+([^\n]+)/gi);
-      if (optionMatches) {
-        optionMatches.forEach(match => {
-          const option = match.replace(/[-*]\s+Option\s+[A-D]:\s+/i, '').trim();
-          options.push(option);
-        });
-      }
-    }
-    
-    // Fallback to old format if needed
-    if (options.length === 0) {
-      for (let i = 0; i < lines.length; i++) {
-        const line = lines[i];
-        // Match lines that start with 2., 3., 4., or 5. followed by text
-        if (/^[2-5]\.\s/.test(line)) {
-          options.push(line.replace(/^[0-9]+\.\s*/, '').trim());
-        }
-        // Stop once we have 4 options
-        if (options.length === 4) break;
-      }
-    }
-    
+
     res.json({
       success: true,
-      content: content,
-      title: title,
-      question: question,
-      options: options,
-      usage: {
-        inputTokens: completion.usage?.prompt_tokens || 0,
-        outputTokens: completion.usage?.completion_tokens || 0,
-        totalTokens: completion.usage?.total_tokens || 0
-      }
+      question,
+      options: finalOptions,
+      fullResponse: generatedPollText
     });
   } catch (error) {
     console.error('Poll generation error:', error);
