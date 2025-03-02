@@ -153,7 +153,9 @@ function parsedContentExample(): void {
   
   // Process the thread
   parsedThread.posts.forEach((post: ThreadPost) => {
-    console.log(`Post ${post.index + 1}: ${post.content} (${post.characterCount} chars)`);
+    // Add null check for post.index since it's optional
+    const postNumber = post.index !== undefined ? post.index + 1 : 'unknown';
+    console.log(`Post ${postNumber}: ${post.content} (${post.characterCount} chars)`);
   });
   
   console.log(`Total characters: ${parsedThread.totalCharacterCount}`);

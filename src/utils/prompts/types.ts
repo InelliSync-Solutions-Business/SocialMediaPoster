@@ -31,6 +31,9 @@ export interface BasePromptParams {
   model?: string;
   temperature?: number;
   maxTokens?: number;
+  top_p?: number;
+  frequency_penalty?: number;
+  presence_penalty?: number;
 }
 
 /**
@@ -81,11 +84,22 @@ export interface PollParams extends SocialMediaParams {
  * Image generation specific parameters
  */
 export interface ImageParams extends BasePromptParams {
+  /** Style of the image (e.g., 'realistic', 'artistic', 'minimalist') */
   style?: string;
+  
+  /** Mood or atmosphere of the image (e.g., 'professional', 'cheerful', 'serious') */
   mood?: string;
+  
+  /** Specific visual elements to include in the image */
   visualElements?: string[];
+  
+  /** Aspect ratio for the generated image */
   aspectRatio?: '1:1' | '16:9' | '4:3' | '9:16';
+  
+  /** Image generation model to use */
   model?: 'dall-e-2' | 'dall-e-3';
+  
+  /** Quality setting for the generated image */
   quality?: 'standard' | 'hd';
 }
 

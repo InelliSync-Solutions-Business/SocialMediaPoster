@@ -14,8 +14,28 @@ export * from './templates';
 // Builder exports
 export * from './builders';
 
-// Parser exports
-export * from './parsers';
+// Parser exports - import specific items to avoid default export conflicts
+import { 
+  threadParser, 
+  newsletterParser, 
+  pollParser, 
+  imageParser, 
+  contentFormatter
+} from './parsers';
+
+// Import thread types from the types/index.ts file
+import { ThreadPost, ParsedThreadContent } from './types/index';
+
+export {
+  threadParser, 
+  newsletterParser, 
+  pollParser, 
+  imageParser, 
+  contentFormatter
+};
+
+// Re-export types using 'export type'
+export type { ThreadPost, ParsedThreadContent };
 
 // Adapter exports
 export * from './adapters';

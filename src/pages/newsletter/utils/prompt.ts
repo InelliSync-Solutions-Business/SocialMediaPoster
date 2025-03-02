@@ -39,7 +39,13 @@ const TYPE_GUIDELINES = {
 
 export const generateNewsletterPrompt = (params: Newsletter): string => {
   const lengthGuide = LENGTH_GUIDELINES[params.length];
-  const typeGuide = TYPE_GUIDELINES[params.type];
+  
+  // Check if the newsletter type exists in TYPE_GUIDELINES
+  // If not, use a default or generic guideline
+  const typeGuide = TYPE_GUIDELINES[params.type as keyof typeof TYPE_GUIDELINES] || {
+    focus: `Content related to ${params.type.replace(/-/g, ' ')}`,
+    elements: ['Key insights', 'Actionable information', 'Relevant examples']
+  };
 
   return `Generate a ${params.tone} newsletter about ${params.topic}.
 

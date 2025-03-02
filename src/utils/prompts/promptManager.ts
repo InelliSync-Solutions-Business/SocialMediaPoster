@@ -1,19 +1,23 @@
+// Core imports
 import { UserPreferences } from '@/types/preferences';
-import CONTENT_PROMPTS from './contentPrompts';
-import { generateLongFormPrompt } from './longFormPrompt';
-import { generateShortFormPrompt } from './shortFormPrompt';
 import { OpenAI } from 'openai';
 
-// Import builders
+// Import prompt generators that we re-export
+import { generateLongFormPrompt } from './longFormPrompt';
+import { generateShortFormPrompt } from './shortFormPrompt';
+
+// Import builders we use directly
 import { 
   PollPromptBuilder,
   ImagePromptBuilder
 } from './builders';
 
+// Import types we use directly
+import { ToneType } from './types';
+
 // Import centralized utilities
 import { estimateTokenCount, calculatePromptCost, getOpenAIModel } from '../ai/tokenUtils';
-import { parseThreadContent as parseThread, fillTemplate } from './contentProcessors';
-import { mapStyleToTone } from './styleMapper';
+import { parseThreadContent as parseThread } from './contentProcessors';
 import { SYSTEM_PROMPTS } from './templates';
 
 // Helper function to build standard post prompt
@@ -303,19 +307,66 @@ export function generatePollPrompt(params: any) {
   });
 }
 
-export function generateImagePrompt(params: any) {
+/**
+ * Generate a prompt for image generation
+ * @param params Parameters for image generation
+ * @returns A structured prompt object for image generation
+ */
+export function generateImagePrompt(params: {
+  topic: string;
+  audience?: string;
+  tone?: string;
+  style?: string;
+  writingStyle?: string;
+  guidelines?: string;
+  mood?: string;
+  visualElements?: string[];
+  aspectRatio?: '1:1' | '16:9' | '4:3' | '9:16' | 'square' | 'portrait' | 'landscape';
+}) {
   const builder = new ImagePromptBuilder();
+  
+  // Check if the tone is a valid ToneType
+  const validTones: ToneType[] = ['professional', 'casual', 'inspirational', 'humorous', 'analytical', 'conversational'];
+  const tone = params.tone && validTones.includes(params.tone as ToneType) 
+    ? params.tone as ToneType 
+    : 'professional';
+  
+  // Map from UI aspect ratio format to DALL-E aspect ratio format
+  let mappedAspectRatio: '1:1' | '16:9' | '4:3' | '9:16' | undefined;
+  
+  if (params.aspectRatio) {
+    switch (params.aspectRatio) {
+      case 'square':
+        mappedAspectRatio = '1:1';
+        break;
+      case 'landscape':
+        mappedAspectRatio = '16:9';
+        break;
+      case 'portrait':
+        mappedAspectRatio = '9:16';
+        break;
+      // If it's already in the correct format, use it directly
+      case '1:1':
+      case '16:9':
+      case '4:3':
+      case '9:16':
+        mappedAspectRatio = params.aspectRatio;
+        break;
+      default:
+        mappedAspectRatio = '1:1'; // Default to square
+    }
+  }
+  
   return builder.build({
     topic: params.topic,
-    targetAudience: params.audience,
-    tone: params.tone,
+    targetAudience: params.audience || 'general audience',
+    tone: tone,
     writingStyle: params.writingStyle || params.style,
     additionalGuidelines: params.guidelines,
     style: params.style, // Use the style parameter directly as ImagePromptBuilder expects
     mood: params.mood,
     visualElements: params.visualElements,
-    aspectRatio: params.aspectRatio,
-    content: params.content // Add content parameter
+    aspectRatio: mappedAspectRatio
   });
 }
 

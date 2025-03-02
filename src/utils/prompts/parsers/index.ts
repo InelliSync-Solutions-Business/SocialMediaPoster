@@ -25,11 +25,8 @@ export {
   contentFormatter
 };
 
-// Type re-exports for convenience
-export type { 
-  ThreadPost,
-  ParsedThreadContent 
-} from './threadParser';
+// Note: ThreadPost and ParsedThreadContent are defined in types.ts, not in threadParser
+// These types should be imported from '../types' instead
 
 // Default export as a unified parsers object
 export default {
