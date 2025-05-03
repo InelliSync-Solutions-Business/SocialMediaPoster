@@ -1,4 +1,11 @@
-export type AIModel = 'gpt-4o' | 'gpt-4o-mini' | 'gpt-3.5-turbo' | 'gpt-4.5' | 'o1' | 'o1-mini';
+export type AIModel =
+  | 'gpt-04-mini'
+  | 'gpt-4.1'
+  | 'gpt-4.1-nano'
+  | 'gpt-4.1-mini'
+  | 'chatgpt-4o'
+  | 'gpt-4o-mini'
+  | 'gpt-o3-mini';
 
 export type NewsletterType = 
   | 'tech-trends' 
